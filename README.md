@@ -34,8 +34,27 @@ This can be used in one of 2 ways:
 
 Note: this cache can get very big very quickly slowing down the performace of your app or website, so be careful how many things you decide to cache.
 
+### Formatting
+To help quickly differentiate data types, a colour coding scheme has been implemented
+
+Item|Text Colour
+----|----
+Description|White
+Strings|Lightblue
+Numbers|Yellow
+Booleans|Lightgreen
+Arrays|Orange
+Objects|Cyan
+Functions|Magenta
+Dates|Pink
+Errors|Red
+
 ### Errors
-Marking an item as an error, or just including the word "error" in the description will mark the item in red, helping you to notice and locate errors more quickly
+Marking an item as an error, or just including the word "error" in the description will mark the item in red, helping you to notice and locate errors more quickly. Empty strings ("\") will be clearly printed out in red *Empty String ("\")*, and the values *null* and *undefined* will show up in red as well to differentiate them from the string values "null" and "undefined".
 
 ## Limitations
-Strings passed to debugmode will be truncated at 5000 charactors, objects at 50 key:value pairs. Only 250 events will be logged per second, afterwhich you will get --TOO MANY MESSAGES LOGGED--. The counter will reset after 5 seconds.
+Strings passed to debugmode will be truncated at 5000 charactors, objects at 50 key:value pairs. Only 250 events will be logged per second, afterwhich you will get:
+
+*--TOO MANY MESSAGES LOGGED--*
+
+The counter will reset after 5 seconds.

@@ -29,12 +29,13 @@ var APP = APP || {};
 		function span(clas, contents, title) {
 			var str = '<span class="debug-';
 			str += clas;
+			str += '"';
 			if (title) {
 				str += ' title="';
 				str += title;
 				str += '"';
 			}
-			str += '">';
+			str += '>';
 			str += contents;
 			str += '</span>';
 			return str;
@@ -83,7 +84,7 @@ var APP = APP || {};
 			var pairs = [], a = 0, val;
 			for (var key in obj) {
 				val = obj[key];
-				pairs[a] = span("text", '"' + key + '"') + ': ' + print_Val(val);
+				pairs[a] = key + ': ' + print_Val(val);
 				a++;
 				if (a > 50) {
 					pairs[a] = "continued....";
@@ -95,8 +96,9 @@ var APP = APP || {};
 		}
 		if (DEBUG_MODE === true || DEBUG_TO_CONSOLE === true && console && console.log) {
 			if (code instanceof Array) code = print_Array(code);
-			else if (code instanceof Function) code = "function() {...}";
-			else if (typeof code === "object") code = "{ " + print_Obj(code) + " }";
+			else if (code instanceof Function) code = span('function', 'function() {...}');
+			else if (code instanceof Date) code = span('date', code);
+			else if (typeof code === "object") code = span('object', "{ " + print_Obj(code) + " }");
 			else code = print_Val(code);
 		}
 		if (DEBUG_MODE === true) {
@@ -147,7 +149,7 @@ var APP = APP || {};
 		DEBUG_DIV.appendChild(DEBUG_MESSAGE_DIV);
 
 		stylesheet.type = 'text/css';
-		stylesheet.innerText = "#debug {display: none;} #hideDebug {padding: 6px 10px;color: red;position: fixed;} html.tabl #hideDebug, html.desk #hideDebug {left: 25%;right: auto;right: initial;} html.tabl #debug.debugRight #hideDebug, html.desk #debug.debugRight #hideDebug {left: auto;left: initial;right: 22px;} html.phon #hideDebug {left: auto;left: initial;right: 12px;} #debug {color: #eee;background-color: #111;background-color: rgba(0, 0, 0, 0.7);text-shadow: 0 0 2px #000;font-family: Consolas, Courier New, Courier, monospace;position: absolute;top: 0;left: 0;right: auto;right: initial;width: 30%;max-width: 400px;height: 100%;-ms-word-wrap: break-word;word-wrap: break-word;overflow: auto;visibility: visible;display: block;z-index: 1099;} #debug.debugRight {left: auto;left: initial;right: 0;} html.phon #debug {position: fixed;width: 100%;max-width: 100%;height: 45%;top: auto;top: initial;bottom: 0;} html.phon #debug.debugRight {top: 0;bottom: auto;bottom: initial;}.debug-function {color: purple;}.debug-error {color: red;}.debug-string {color: lightblue;}.debug-boolean {color: lightgreen;}.debug-date {color: pink;}.debug-number {color: yellow;}.debug-text {color: white;}.debug-array {color: orange;}.debug-timestamp {color: #CCC;font-size: 0.75em;}";
+		stylesheet.innerText = "#debug {display: none;} #hideDebug {padding: 6px 10px;color: red;position: fixed;} html.tabl #hideDebug, html.desk #hideDebug {left: 25%;right: auto;right: initial;} html.tabl #debug.debugRight #hideDebug, html.desk #debug.debugRight #hideDebug {left: auto;left: initial;right: 22px;} html.phon #hideDebug {left: auto;left: initial;right: 12px;} #debug {color: #eee;background-color: #111;background-color: rgba(0, 0, 0, 0.7);text-shadow: 0 0 2px #000;font-family: Consolas, Courier New, Courier, monospace;position: absolute;top: 0;left: 0;right: auto;right: initial;width: 30%;max-width: 400px;height: 100%;-ms-word-wrap: break-word;word-wrap: break-word;overflow: auto;visibility: visible;display: block;z-index: 1099;} #debug.debugRight {left: auto;left: initial;right: 0;} html.phon #debug {position: fixed;width: 100%;max-width: 100%;height: 45%;top: auto;top: initial;bottom: 0;} html.phon #debug.debugRight {top: 0;bottom: auto;bottom: initial;} .debug-object {color: cyan;} .debug-function {color: magenta;}.debug-error {color: red;}.debug-string {color: lightblue;}.debug-boolean {color: lightgreen;}.debug-date {color: pink;}.debug-number {color: yellow;}.debug-text {color: white;}.debug-array {color: orange;}.debug-timestamp {color: #CCC;font-size: 0.75em;}";
 		document.head.appendChild(stylesheet);
 
 		window.document.body.insertBefore(DEBUG_DIV, window.document.body.firstChild);
@@ -173,7 +175,7 @@ var APP = APP || {};
 		HIDE_DEBUG_BUTTON,
 		DEBUG_DIV,
 		DEBUG_MESSAGE_DIV;
-		
+
 	APP.setDebugMode = function (debugMode) {
 		var str = debugMode;
 		if (debugMode === true || /y|true/g.test(str)) {
