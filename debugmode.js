@@ -138,10 +138,6 @@ var APP = APP || {};
 		var width = window.innerWidth !== null ? window.innerWidth : document.body !== null && document.body.clientWidth !== null ? document.body.clientWidth : window.screen !== null ? window.screen.availWidth : 0,
 			type = "debugShowLarge ";
 		if (width <= 640) type = "debugShowSmall ";
-		console.log(width, type);
-		console.log(window.innerWidth, "window.innerWidth");
-		console.log(window.screen, "window.screen");
-		console.log(document.body.clientWidth, "document.body.clientWidth");
 		HTML_TAG.className = trim(type + HTML_TAG.className.replace(/debugShowLarge|debugShowSmall/g, ""));
 	}
 	function init() {
