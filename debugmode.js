@@ -5,6 +5,8 @@ var APP = APP || {};
 		if (DEBUG_MODE === true) {
 			APP.debug("Debug Mode turned off");
 			APP.setDebugMode(false);
+			HTML_TAG.className = HTML_TAG.className.replace(/debugmodeOn/g, "");
+
 		}
 		else {
 			APP.setDebugMode(true);
@@ -102,6 +104,7 @@ var APP = APP || {};
 			else code = print_Val(code);
 		}
 		if (DEBUG_MODE === true) {
+			if (!/debugmodeOn/.test(HTML_TAG.className)) HTML_TAG.className = HTML_TAG.className + " debugmodeOn";
 			var debugmessage = "<span class='debug-timestamp'>";
 			debugmessage += timestamp;
 			debugmessage += "    </span><br />&nbsp;&nbsp;";
@@ -149,7 +152,7 @@ var APP = APP || {};
 		DEBUG_DIV.appendChild(DEBUG_MESSAGE_DIV);
 
 		stylesheet.type = 'text/css';
-		stylesheet.innerText = "#debug {display: none;} #hideDebug {padding: 6px 10px;color: red;position: fixed;} html.tabl #hideDebug, html.desk #hideDebug {left: 25%;right: auto;right: initial;} html.tabl #debug.debugRight #hideDebug, html.desk #debug.debugRight #hideDebug {left: auto;left: initial;right: 22px;} html.phon #hideDebug {left: auto;left: initial;right: 12px;} #debug {color: #eee;background-color: #111;background-color: rgba(0, 0, 0, 0.7);text-shadow: 0 0 2px #000;font-family: Consolas, Courier New, Courier, monospace;position: absolute;top: 0;left: 0;right: auto;right: initial;width: 30%;max-width: 400px;height: 100%;-ms-word-wrap: break-word;word-wrap: break-word;overflow: auto;visibility: visible;display: block;z-index: 1099;} #debug.debugRight {left: auto;left: initial;right: 0;} html.phon #debug {position: fixed;width: 100%;max-width: 100%;height: 45%;top: auto;top: initial;bottom: 0;} html.phon #debug.debugRight {top: 0;bottom: auto;bottom: initial;} .debug-object {color: cyan;} .debug-function {color: magenta;}.debug-error {color: red;}.debug-string {color: lightblue;}.debug-boolean {color: lightgreen;}.debug-date {color: pink;}.debug-number {color: yellow;}.debug-text {color: white;}.debug-array {color: orange;}.debug-timestamp {color: #CCC;font-size: 0.75em;}";
+		stylesheet.innerText = "#debug {display: none;} #hideDebug {padding: 6px 10px;color: red;position: fixed;} html.tabl #hideDebug, html.desk #hideDebug {left: 25%;right: auto;right: initial;} html.tabl #debug.debugRight #hideDebug, html.desk #debug.debugRight #hideDebug {left: auto;left: initial;right: 22px;} html.phon #hideDebug {left: auto;left: initial;right: 12px;} html.debugmodeOn #debug {color: #eee;background-color: #111;background-color: rgba(0, 0, 0, 0.7);text-shadow: 0 0 2px #000;font-family: Consolas, Courier New, Courier, monospace;position: absolute;top: 0;left: 0;right: auto;right: initial;width: 30%;max-width: 400px;height: 100%;-ms-word-wrap: break-word;word-wrap: break-word;overflow: auto;visibility: visible;display: block;z-index: 1099;} html.debugmodeOn #debug.debugRight {left: auto;left: initial;right: 0;} html.phon #debug {position: fixed;width: 100%;max-width: 100%;height: 45%;top: auto;top: initial;bottom: 0;} html.phon #debug.debugRight {top: 0;bottom: auto;bottom: initial;} .debug-object {color: cyan;} .debug-function {color: magenta;}.debug-error {color: red;}.debug-string {color: lightblue;}.debug-boolean {color: lightgreen;}.debug-date {color: pink;}.debug-number {color: yellow;}.debug-text {color: white;}.debug-array {color: orange;}.debug-timestamp {color: #CCC;font-size: 0.75em;}";
 		document.head.appendChild(stylesheet);
 
 		window.document.body.insertBefore(DEBUG_DIV, window.document.body.firstChild);
@@ -174,7 +177,8 @@ var APP = APP || {};
 		INITIATED = false,
 		HIDE_DEBUG_BUTTON,
 		DEBUG_DIV,
-		DEBUG_MESSAGE_DIV;
+		DEBUG_MESSAGE_DIV,
+		HTML_TAG = document.getElementsByTagName("html")[0];
 
 	APP.setDebugMode = function (debugMode) {
 		var str = debugMode;
