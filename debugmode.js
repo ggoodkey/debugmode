@@ -99,6 +99,7 @@ var APP = APP || {};
 			if (code instanceof Array) code = print_Array(code);
 			else if (code instanceof Function) code = span('function', 'function() {...}');
 			else if (code instanceof Date) code = span('date', code);
+			else if (code === null || code === undefined) code = print_Val(code);
 			else if (typeof code === "object") code = span('object', "{ " + print_Obj(code) + " }");
 			else code = print_Val(code);
 		}
@@ -128,13 +129,13 @@ var APP = APP || {};
 		}
 		code = null; description = null;
 	}
+	function trim(str) {
+		str = String(str);
+		while (/\s\s/g.test(str)) str = str.replace(/\s\s/g, " ");
+		if (str === " ") return "";
+		return str.replace(/^\s+|\s+$/gm, "");
+	}
 	function layout() {
-		function trim(str) {
-			str = String(str);
-			while (/\s\s/g.test(str)) str = str.replace(/\s\s/g, " ");
-			if (str === " ") return "";
-			return str.replace(/^\s+|\s+$/gm, "");
-		}
 		var width = window.innerWidth !== null ? window.innerWidth : document.body !== null && document.body.clientWidth !== null ? document.body.clientWidth : window.screen !== null ? window.screen.availWidth : 0,
 			type = "debugShowLarge ";
 		if (width <= 640) type = "debugShowSmall ";
@@ -178,7 +179,7 @@ var APP = APP || {};
 		HIDE_DEBUG_BUTTON.removeEventListener('click', changeDebugMode);
 		DEBUG_DIV.removeEventListener('click', moveDebugWindow);
 		window.document.body.removeChild(DEBUG_DIV);
-		HTML_TAG.className = HTML_TAG.className.replace(/debugmodeOn/g, "");
+		HTML_TAG.className = trim(HTML_TAG.className.replace(/debugmodeOn|debugShowLarge|debugShowSmall/g, ""));
 	}
 	var DEBUG_COUNT = 0,
 		DEBUG_TIME = new Date().getTime(),
@@ -194,8 +195,7 @@ var APP = APP || {};
 		HTML_TAG = document.getElementsByTagName("html")[0];
 
 	APP.setDebugMode = function (debugMode) {
-		var str = debugMode;
-		if (debugMode === true || /y|true/g.test(str)) {
+		if (debugMode === true) {
 			if (!INITIATED) init();
 			debugMode = true;
 			while (CACHE_MSG_INDEX) {
@@ -204,21 +204,20 @@ var APP = APP || {};
 			}
 			ERROR_CACHE = [];
 		}
-		else if (debugMode === false || /n|f/g.test(str)) {
+		else if (debugMode === false) {
 			destroy();
 			INITIATED = false;
 			debugMode = false;
 		}
 		else {
 			DEBUG_MODE = true;
-			APP.debug(span("error", "Error: Cannot set DEBUGMODE to " + debugMode));
+			APP.debug(debugMode, "Error: Cannot set DebugMode to", true);
 		}
 		DEBUG_MODE = debugMode;
 		return debugMode;
 	};
 	APP.setDebugToConsole = function (debugMode) {
-		var str = debugMode;
-		if (debugMode === true || /y|true/g.test(str)) {
+		if (debugMode === true) {
 			debugMode = true;
 			while (CACHE_MSG_INDEX) {
 				CACHE_MSG_INDEX--;
@@ -226,16 +225,16 @@ var APP = APP || {};
 			}
 			ERROR_CACHE = [];
 		}
-		else if (debugMode === false || /n|f/g.test(str)) debugMode = false;
+		else if (debugMode === false) debugMode = false;
 		else {
 			DEBUG_TO_CONSOLE = true;
-			APP.debug(span("error", "Error: Cannot set DEBUGTOCONSOLE to " + debugMode));
+			APP.debug(debugMode, "Error: Cannot set DebugToConsole to", true);
 		}
 		DEBUG_TO_CONSOLE = debugMode;
 		return debugMode;
 	};
 	APP.CacheMsg = function (msg, description, severity) {
-		if (DEBUG_MODE === true) debug(msg, description);
+		if (DEBUG_MODE === true) APP.debug(msg, description, severity);
 		else {
 			ERROR_CACHE[CACHE_MSG_INDEX] = [timeStamp(new Date()), description, msg, severity];
 			CACHE_MSG_INDEX++;

@@ -3,6 +3,8 @@ Ever been frustrated by the fact that you can't debug your website, or mobile we
 browser because it lacks a console? DUN DA DA DA DUN!! Enter *debugmode*, a console like overlay for 
 testing JavaScript code in browsers that do not support console.log, i.e. mobile browsers.
 
+![Welcome to debugging in a mobile browser](img/debugmode-welcome.png)
+
 ## Basic functionality
 Debugmode inserts a semi-transparent div overlay covering a portion of your webpage (at z-index: 1099), 
 inserts some CSS styles into your CSS stylesheet and then logs and displays events in sylized HTML. 
@@ -63,7 +65,7 @@ Note: this cache can get very big very quickly slowing down the performace of yo
 so be careful how many things you decide to cache.
 
 ## Formatting
-To help quickly differentiate data types, a colour coding scheme has been implemented
+To help quickly differentiate data types, a colour coding scheme has been implemented.
 
 Item|Text Colour
 ----|----
@@ -76,6 +78,8 @@ Objects|Cyan
 Functions|Magenta
 Dates|Pink
 Errors|Red
+
+![debugmode colour formatting](img/debugmode-example.png)
 
 ## Errors
 Marking an item as an error, or just including the word "error" in the description will mark the item 
