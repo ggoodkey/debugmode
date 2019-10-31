@@ -66,7 +66,7 @@ var APP = APP || {};
 			else if (typeof val === "object") {
 				if (val instanceof Date) str = span("date", val);
 				else if (val instanceof Array) str = print_Array(val);
-				else str = span("text", "{ " + print_Obj(val) + " }");
+				else str = span("object", "{ " + print_Obj(val) + " }");
 			}
 			else str = span("error", "???: " + val);
 			val = null;
