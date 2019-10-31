@@ -81,29 +81,89 @@ var APP = APP || {};
 			arr = null;
 			return str;
 		}
+		function to_Readable_JSON(str) {
+			function enter() {
+				out += "<br />";
+				for (a = 0; a < tabDepth; a++) {
+					out += "&nbsp;&nbsp;&nbsp;&nbsp;";
+				}
+			}
+			function getArrayDepth(position) {
+				//look ahead from 'position' to see how deep the array is
+				//if 2d or 3d array, add extra whitespace
+				position++;
+				for (let depth = 1, len = str.length; position < len; position++) {
+					if (str[position] === "[") {
+						depth++;
+						if (depth > arrayDepth) arrayDepth = depth;
+					}
+					if (str[position] === "]") {
+						depth--;
+						if (depth === 0) {
+							//end of array
+							if (arrayDepth > 0) {
+								arrayEnd = position;//set the end of the array position
+								tabDepth++;
+								enter();
+							}
+							return arrayDepth;
+						}
+					}
+				}
+			}
+			var quote = false,
+				tabDepth = 0,
+				prevChar,
+				out = "",
+				a = 0,
+				array = 0,
+				arrayDepth = 0,
+				arrayEnd = 0;
+			for (let c = 0, len = str.length; c < len; c++) {
+				if ((str[c] === "}" || str[c] === "]" && c === arrayEnd) && !quote) {
+					tabDepth--;
+					enter();
+				}
+				out += str[c];
+				if (str[c] === '"' && prevChar !== "\\") quote = !quote;
+				else if (!quote) {
+					if (str[c] === "," /*&& (array === 0 || array < arrayDepth)*/) {
+						enter();
+						if (str[c + 1] === " ") c++; //skip space
+					}
+					else if (str[c] === "[") {
+						if (c > arrayEnd) getArrayDepth(c);
+						array++;
+					}
+					else if (str[c] === "]") {
+						array--;
+						if (array === 0) arrayDepth = 0;
+					}
+					else if (str[c] === "{") {
+						tabDepth++;
+						enter();
+						if (str[c + 1] === " ") c++; //skip space
+					}
+				}
+				prevChar = str[c];
+			}
+			return out;
+		}
 		function print_Obj(obj) {
 			var pairs = [], a = 0, val;
-			for (var key in obj) {
+			for (let key in obj) {
 				val = obj[key];
 				pairs[a] = key + ': ' + print_Val(val);
 				a++;
-				if (a > 50) {
+				if (a > 25) {
 					pairs[a] = "continued....";
 					break;
 				}
 			}
-			a = null; obj = null; key = null; val = null;
-			return pairs.join(",<br />");
+			a = null; obj = null; val = null;
+			return pairs.join(",");
 		}
-		if (DEBUG_MODE === true || DEBUG_TO_CONSOLE === true && console && console.log) {
-			if (code instanceof Array) code = print_Array(code);
-			else if (code instanceof Function) code = span('function', 'function() {...}');
-			else if (code instanceof Date) code = span('date', code);
-			else if (code === null || code === undefined) code = print_Val(code);
-			else if (typeof code === "object") code = span('object', "{ " + print_Obj(code) + " }");
-			else code = print_Val(code);
-		}
-		if (DEBUG_MODE === true) {
+		function toDebugDiv() {
 			if (!/debugmodeOn/.test(HTML_TAG.className)) HTML_TAG.className = HTML_TAG.className + " debugmodeOn";
 			var debugmessage = "<span class='debug-timestamp'>";
 			debugmessage += timestamp;
@@ -119,14 +179,27 @@ var APP = APP || {};
 			DEBUG_MESSAGE_DIV.innerHTML = debugmessage;
 			debugmessage = null;
 		}
-		if (DEBUG_TO_CONSOLE === true && console && console.log) {
+		function toConsole() {
 			var consolemessage = timestamp;
 			if (description) consolemessage += "   " + description + ":\n         ";
 			consolemessage += "   ";
 			consolemessage += code;
-			console.log(consolemessage.replace(/<\/?span[^>]*>/g, "").replace(/<br \/>/g, "\n            "));
+			console.log(consolemessage.replace(/<\/?span[^>]*>/g, "").replace(/<br \/>/g, "\n            ").replace(/&nbsp;/g," "));
 			consolemessage = null;
 		}
+		if (DEBUG_TO_CONSOLE === true && (severity !== undefined || /error/i.test(description))) {
+			APP.setDebugMode(true);
+		}
+		if (DEBUG_MODE === true || DEBUG_TO_CONSOLE === true && console && console.log) {
+			if (code instanceof Array) code = to_Readable_JSON(print_Array(code));
+			else if (code instanceof Function) code = span('function', 'function() {...}');
+			else if (code instanceof Date) code = span('date', code);
+			else if (code === null || code === undefined) code = print_Val(code);
+			else if (typeof code === "object") code = span('object', "{ " + to_Readable_JSON(print_Obj(code)) + " }");
+			else code = print_Val(code);
+		}
+		if (DEBUG_MODE === true) toDebugDiv();
+		if (DEBUG_TO_CONSOLE === true && console && console.log) toConsole();
 		code = null; description = null;
 	}
 	function trim(str) {
@@ -136,7 +209,9 @@ var APP = APP || {};
 		return str.replace(/^\s+|\s+$/gm, "");
 	}
 	function layout() {
-		var width = window.innerWidth !== null ? window.innerWidth : document.body !== null && document.body.clientWidth !== null ? document.body.clientWidth : window.screen !== null ? window.screen.availWidth : 0,
+		var width = window.innerWidth !== null ? window.innerWidth :
+			document.body !== null && document.body.clientWidth !== null ? document.body.clientWidth :
+				window.screen !== null ? window.screen.availWidth : 0,
 			type = "debugShowLarge ";
 		if (width <= 640) type = "debugShowSmall ";
 		HTML_TAG.className = trim(type + HTML_TAG.className.replace(/debugShowLarge|debugShowSmall/g, ""));
@@ -166,7 +241,7 @@ var APP = APP || {};
 		layout();
 
 		stylesheet.type = 'text/css';
-		stylesheet.innerText = "#debug {display: none;} #hideDebug {padding: 6px 10px;color: red;position: fixed;} html.debugShowLarge #hideDebug {left: 25%;right: auto;right: initial;} html.debugShowLarge #debug.debugRight #hideDebug {left: auto;left: initial;right: 22px;} html.debugShowSmall #hideDebug {left: auto;left: initial;right: 12px;} html.debugmodeOn #debug {color: #eee;background-color: #111;background-color: rgba(0, 0, 0, 0.7);text-shadow: 0 0 2px #000;font-family: Consolas, Courier New, Courier, monospace;position: absolute;top: 0;left: 0;right: auto;right: initial;width: 30%;max-width: 400px;height: 100%;-ms-word-wrap: break-word;word-wrap: break-word;overflow: auto;visibility: visible;display: block;z-index: 1099;} html.debugmodeOn #debug.debugRight {left: auto;left: initial;right: 0;} html.debugShowSmall #debug {position: fixed;width: 100%;max-width: 100%;height: 45%;top: auto;top: initial;bottom: 0;} html.debugShowSmall #debug.debugRight {top: 0;bottom: auto;bottom: initial;} .debug-object {color: cyan;} .debug-function {color: magenta;}.debug-error {color: red;}.debug-string {color: lightblue;}.debug-boolean {color: lightgreen;}.debug-date {color: pink;}.debug-number {color: yellow;}.debug-text {color: white;}.debug-array {color: orange;}.debug-timestamp {color: #CCC;font-size: 0.75em;}";
+		stylesheet.innerText = "#debug{display:none} #hideDebug{padding:6px 10px;color:red;position:fixed} html.debugShowLarge #hideDebug{left:25%;right:auto;right:initial} html.debugShowLarge #debug.debugRight #hideDebug{left:auto;left:initial;right:22px} html.debugShowSmall #hideDebug {left:auto;left:initial;right:12px} html.debugmodeOn #debug{color:#eee;background-color:#111;background-color:rgba(0,0,0,0.7);text-shadow:0 0 2px #000;font-family:Consolas,Courier New,Courier,monospace;position:fixed;top:0;left:0;right:auto;right:initial;width:30%;max-width:400px;height:100%;-ms-word-wrap:break-word;word-wrap:break-word;overflow:auto;visibility:visible;display:block;z-index:1099} html.debugmodeOn #debug.debugRight{left:auto;left:initial;right:0} html.debugShowSmall #debug{position:fixed;width:100%;max-width:100%;height:45%;top:auto;top:initial;bottom:0} html.debugShowSmall #debug.debugRight{top:0;bottom:auto;bottom:initial} .debug-object{color:cyan} .debug-function{color:magenta} .debug-error{color:red} .debug-string{color:lightblue} .debug-boolean{color:lightgreen} .debug-date{color:pink} .debug-number{color:yellow} .debug-text{color:white} .debug-array{color:orange} .debug-timestamp{color:#CCC;font-size:0.75em}";
 		document.head.appendChild(stylesheet);
 
 		window.document.body.insertBefore(DEBUG_DIV, window.document.body.firstChild);
@@ -176,10 +251,12 @@ var APP = APP || {};
 		INITIATED = true;
 	}
 	function destroy() {
-		HIDE_DEBUG_BUTTON.removeEventListener('click', changeDebugMode);
-		DEBUG_DIV.removeEventListener('click', moveDebugWindow);
-		window.document.body.removeChild(DEBUG_DIV);
-		HTML_TAG.className = trim(HTML_TAG.className.replace(/debugmodeOn|debugShowLarge|debugShowSmall/g, ""));
+		if(HIDE_DEBUG_BUTTON) HIDE_DEBUG_BUTTON.removeEventListener('click', changeDebugMode);
+		if (DEBUG_DIV) {
+			DEBUG_DIV.removeEventListener('click', moveDebugWindow);
+			window.document.body.removeChild(DEBUG_DIV);
+		}
+		if(HTML_TAG) HTML_TAG.className = trim(HTML_TAG.className.replace(/debugmodeOn|debugShowLarge|debugShowSmall/g, ""));
 	}
 	var DEBUG_COUNT = 0,
 		DEBUG_TIME = new Date().getTime(),
