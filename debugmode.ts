@@ -290,7 +290,7 @@ var APP = APP || {};
 		if (debugMode === true) {
 			if (!INITIATED) init();
 			DEBUG_MODE = debugMode;
-			while (CACHE_MSG_INDEX--) {
+			while (CACHE_MSG_INDEX-- > 0) {
 				_debug.apply(null, ERROR_CACHE[CACHE_MSG_INDEX]);
 			}
 			ERROR_CACHE = [];
@@ -309,7 +309,7 @@ var APP = APP || {};
 	APP.setDebugToConsole = function (debugMode: boolean): boolean {
 		if (debugMode === true) {
 			DEBUG_TO_CONSOLE = debugMode;
-			while (CACHE_MSG_INDEX--) {
+			while (CACHE_MSG_INDEX-- > 0) {
 				_debug.apply(null, ERROR_CACHE[CACHE_MSG_INDEX]);
 			}
 			ERROR_CACHE = [];
