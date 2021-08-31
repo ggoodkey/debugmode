@@ -289,46 +289,42 @@ var APP = APP || {};
 	APP.setDebugMode = function (debugMode: boolean): boolean {
 		if (debugMode === true) {
 			if (!INITIATED) init();
-			debugMode = true;
-			while (CACHE_MSG_INDEX) {
-				CACHE_MSG_INDEX--;
-				_debug(ERROR_CACHE[CACHE_MSG_INDEX]);
+			DEBUG_MODE = debugMode;
+			while (CACHE_MSG_INDEX--) {
+				_debug.apply(null, ERROR_CACHE[CACHE_MSG_INDEX]);
 			}
 			ERROR_CACHE = [];
 		}
 		else if (debugMode === false) {
 			destroy();
 			INITIATED = false;
-			debugMode = false;
+			DEBUG_MODE = debugMode;
 		}
 		else {
 			DEBUG_MODE = true;
 			APP.debug(debugMode, "Error: Cannot set DebugMode to", true);
 		}
-		DEBUG_MODE = debugMode;
-		return debugMode;
+		return DEBUG_MODE;
 	};
 	APP.setDebugToConsole = function (debugMode: boolean): boolean {
 		if (debugMode === true) {
-			debugMode = true;
-			while (CACHE_MSG_INDEX) {
-				CACHE_MSG_INDEX--;
-				_debug(ERROR_CACHE[CACHE_MSG_INDEX]);
+			DEBUG_TO_CONSOLE = debugMode;
+			while (CACHE_MSG_INDEX--) {
+				_debug.apply(null, ERROR_CACHE[CACHE_MSG_INDEX]);
 			}
 			ERROR_CACHE = [];
 		}
-		else if (debugMode === false) debugMode = false;
+		else if (debugMode === false) DEBUG_TO_CONSOLE = debugMode;
 		else {
 			DEBUG_TO_CONSOLE = true;
 			APP.debug(debugMode, "Error: Cannot set DebugToConsole to", true);
 		}
-		DEBUG_TO_CONSOLE = debugMode;
-		return debugMode;
+		return DEBUG_TO_CONSOLE;
 	};
 	APP.cacheMsg = function (code: any, description?: string, severity?: boolean): void {
 		if (DEBUG_MODE === true) APP.debug(code, description, severity);
 		else {
-			ERROR_CACHE[CACHE_MSG_INDEX] = [timeStamp(new Date()), description, code, severity];
+			ERROR_CACHE[CACHE_MSG_INDEX] = [code, description, severity, timeStamp(new Date())];
 			CACHE_MSG_INDEX++;
 		}
 	};
