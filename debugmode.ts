@@ -1,5 +1,5 @@
 "use strict";
-interface debugFunctions {
+interface GlobalAppFunctions {
 	/** toggles debugmode on or off */
 	setDebugMode: (debugMode: boolean) => boolean;
 
@@ -12,7 +12,7 @@ interface debugFunctions {
 	/** display the contents of a variable, object, number, string, array, function etc., on screen and/or to the console */
 	debug: (code: any, description?: string, severity?: boolean) => void;
 }
-var APP = APP || {};
+var APP: GlobalAppFunctions = APP! || {};
 (function () {
 	function changeDebugMode() {
 		if (DEBUG_MODE === true) {
@@ -28,19 +28,19 @@ var APP = APP || {};
 		layout();
 		DEBUG_DIV.className = /debugRight/.test(DEBUG_DIV.className) ? "" : "debugRight";
 	}
-	function timeStamp(d) {
-		var m = d.getMinutes(), s = d.getSeconds(), x = d.getMilliseconds();
+	function timeStamp(d: Date) {
+		var m = d.getMinutes(), s = d.getSeconds(), x = d.getMilliseconds(), m1: string, s1: string, x1: string;
 		DEBUG_COUNT++;
 		DEBUG_TIME = d.getTime();
 		/* add a zero in front of numbers<10 */
-		m = m < 10 ? "0" + m : m;
-		s = s < 10 ? "0" + s : s;
-		x = x < 10 ? "0" + x : x;
-		x = x < 100 ? "0" + x : x;
-		return m + ":" + s + ":" + x;
+		m1 = m < 10 ? "0" + m : m.toString();
+		s1 = s < 10 ? "0" + s : s.toString();
+		x1 = x < 10 ? "0" + x : x.toString();
+		x1 = x < 100 ? "0" + x1 : x1;
+		return m1 + ":" + s1 + ":" + x1;
 	}
-	function _debug(code, description?, severity?, timestamp?) {
-		function span(clas, contents, title?) {
+	function _debug(timestamp: string, code: any, description?: string, severity?: boolean) {
+		function span(clas: string, contents: any, title?: string) {
 			var str = '<span class="debug-';
 			str += clas;
 			str += '"';
@@ -54,11 +54,11 @@ var APP = APP || {};
 			str += '</span>';
 			return str;
 		}
-		function print_Val(val) {
+		function print_Val(val: any) {
 			var str = "";
 			if (val instanceof Function) str = span('function', 'function() {...}');
 			else if (typeof val === "number") {
-				if (val > 1500000000000 && val < 2000000000000) str = span('number', val, new Date(val));
+				if (val > 1500000000000 && val < 2000000000000) str = span('number', val, new Date(val).toString());
 				else str = span("number", val);
 			}
 			else if (val === null) str = span("error", "null");
@@ -79,13 +79,14 @@ var APP = APP || {};
 			else if (typeof val === "object") {
 				if (val instanceof Date) str = span("date", val);
 				else if (val instanceof Array) str = print_Array(val);
+				else if (val instanceof Error) str = span("error", val.name + ": " + val.message);
 				else str = span("text", "{ " + print_Obj(val) + " }");
 			}
 			else str = span("error", "???: " + val);
 			val = null!;
 			return str;
 		}
-		function print_Array(arr) {
+		function print_Array(arr: any[]) {
 			var values: string[] = [], len = arr.length;
 			if (len === 0) return span("array", '[ ' + span("error", "Empty array") + ' ]');
 			for (var i = 0; i < len; i++) values[i] = print_Val(arr[i]);
@@ -94,14 +95,14 @@ var APP = APP || {};
 			arr = null!;
 			return str;
 		}
-		function to_Readable_JSON(str) {
+		function to_Readable_JSON(str: string) {
 			function enter() {
 				out += "<br />";
 				for (a = 0; a < tabDepth; a++) {
 					out += "&nbsp;&nbsp;&nbsp;&nbsp;";
 				}
 			}
-			function getArrayDepth(position) {
+			function getArrayDepth(position: number) {
 				//look ahead from 'position' to see how deep the array is
 				//if 2d or 3d array, add extra whitespace
 				position++;
@@ -163,7 +164,7 @@ var APP = APP || {};
 			}
 			return out;
 		}
-		function print_Obj(obj) {
+		function print_Obj(obj: {[key: string]: any}) {
 			var pairs: string[] = [], a = 0, val;
 			for (let key in obj) {
 				val = obj[key];
@@ -183,7 +184,7 @@ var APP = APP || {};
 			debugmessage += timestamp;
 			debugmessage += "    </span><br />&nbsp;&nbsp;";
 			if (description) {
-				if (severity !== undefined || /error/i.test(description))
+				if (severity || /error/i.test(description))
 					debugmessage += span("error", description + " " + code);
 				else debugmessage += description + " " + code;
 			}
@@ -201,7 +202,7 @@ var APP = APP || {};
 			console.log(consolemessage.replace(/<\/?span[^>]*>/g, "").replace(/<br \/>/g, "\n            ").replace(/&nbsp;/g, " "));
 			consolemessage = null!;
 		}
-		if (DEBUG_TO_CONSOLE === true && (severity !== undefined || /error/i.test(description))) {
+		if (DEBUG_TO_CONSOLE === true && (severity || description && /error/i.test(description))) {
 			APP.setDebugMode(true);
 		}
 		if (DEBUG_MODE === true || DEBUG_TO_CONSOLE === true && console && console.log) {
@@ -216,7 +217,7 @@ var APP = APP || {};
 		if (DEBUG_TO_CONSOLE === true && console && console.log) toConsole();
 		code = null!; description = null!;
 	}
-	function trim(str) {
+	function trim(str: string) {
 		str = String(str);
 		while (/\s\s/g.test(str)) str = str.replace(/\s\s/g, " ");
 		if (str === " ") return "";
@@ -234,14 +235,12 @@ var APP = APP || {};
 		var stylesheet = document.createElement('style'),
 			span = document.createElement('span');
 
-		span["aria-hidden"] = true;
 		span.appendChild(document.createTextNode("\u2A2F"));//times symbol
 
 		HIDE_DEBUG_BUTTON = document.createElement('button');
 		HIDE_DEBUG_BUTTON.id = "hideDebug";
 		HIDE_DEBUG_BUTTON.type = "button";
-		HIDE_DEBUG_BUTTON.class = "close";
-		HIDE_DEBUG_BUTTON["aria-label"] = "Close debug window";
+		HIDE_DEBUG_BUTTON.className = "close";
 		HIDE_DEBUG_BUTTON.appendChild(span);
 
 		DEBUG_MESSAGE_DIV = document.createElement('div');
@@ -278,13 +277,13 @@ var APP = APP || {};
 		DEBUG_STOP = false,
 		DEBUG_MODE = false,
 		DEBUG_TO_CONSOLE = false,
-		ERROR_CACHE: any[] = [],
+		ERROR_CACHE: [string, any, string?, boolean?][] = [],
 		CACHE_MSG_INDEX = 0,
 		INITIATED = false,
-		HIDE_DEBUG_BUTTON,
-		DEBUG_DIV,
-		DEBUG_MESSAGE_DIV,
-		HTML_TAG = document.getElementsByTagName("html")[0];
+		HIDE_DEBUG_BUTTON: HTMLButtonElement,
+		DEBUG_DIV: HTMLDivElement,
+		DEBUG_MESSAGE_DIV: HTMLDivElement,
+		HTML_TAG:HTMLElement = document.getElementsByTagName("html")[0];
 
 	APP.setDebugMode = function (debugMode: boolean): boolean {
 		if (debugMode === true) {
@@ -324,12 +323,13 @@ var APP = APP || {};
 	APP.cacheMsg = function (code: any, description?: string, severity?: boolean): void {
 		if (DEBUG_MODE === true) APP.debug(code, description, severity);
 		else {
-			ERROR_CACHE[CACHE_MSG_INDEX] = [code, description, severity, timeStamp(new Date())];
+			ERROR_CACHE[CACHE_MSG_INDEX] = [timeStamp(new Date()), code, description, severity];
 			CACHE_MSG_INDEX++;
 		}
 	};
 	/*prints a message to div called #debugMsg, like console.log*/
 	APP.debug = function (code: any, description?: string, severity?: boolean): void {
+		if (!INITIATED) return;
 		var d = new Date();
 		if (DEBUG_STOP === true && d.getTime() - DEBUG_TIME > 5000) {
 			DEBUG_COUNT = 0;
@@ -343,7 +343,7 @@ var APP = APP || {};
 			DEBUG_STOP = true;
 		}
 		if (DEBUG_STOP === false) {
-			_debug(code, description, severity, timeStamp(d));
+			_debug(timeStamp(d), code, description, severity);
 		}
 		d = null!;
 	};

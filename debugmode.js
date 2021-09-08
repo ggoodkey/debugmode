@@ -16,17 +16,17 @@ var APP = APP || {};
         DEBUG_DIV.className = /debugRight/.test(DEBUG_DIV.className) ? "" : "debugRight";
     }
     function timeStamp(d) {
-        var m = d.getMinutes(), s = d.getSeconds(), x = d.getMilliseconds();
+        var m = d.getMinutes(), s = d.getSeconds(), x = d.getMilliseconds(), m1, s1, x1;
         DEBUG_COUNT++;
         DEBUG_TIME = d.getTime();
         /* add a zero in front of numbers<10 */
-        m = m < 10 ? "0" + m : m;
-        s = s < 10 ? "0" + s : s;
-        x = x < 10 ? "0" + x : x;
-        x = x < 100 ? "0" + x : x;
-        return m + ":" + s + ":" + x;
+        m1 = m < 10 ? "0" + m : m.toString();
+        s1 = s < 10 ? "0" + s : s.toString();
+        x1 = x < 10 ? "0" + x : x.toString();
+        x1 = x < 100 ? "0" + x1 : x1;
+        return m1 + ":" + s1 + ":" + x1;
     }
-    function _debug(code, description, severity, timestamp) {
+    function _debug(timestamp, code, description, severity) {
         function span(clas, contents, title) {
             var str = '<span class="debug-';
             str += clas;
@@ -47,7 +47,7 @@ var APP = APP || {};
                 str = span('function', 'function() {...}');
             else if (typeof val === "number") {
                 if (val > 1500000000000 && val < 2000000000000)
-                    str = span('number', val, new Date(val));
+                    str = span('number', val, new Date(val).toString());
                 else
                     str = span("number", val);
             }
@@ -186,7 +186,7 @@ var APP = APP || {};
             debugmessage += timestamp;
             debugmessage += "    </span><br />&nbsp;&nbsp;";
             if (description) {
-                if (severity !== undefined || /error/i.test(description))
+                if (severity || /error/i.test(description))
                     debugmessage += span("error", description + " " + code);
                 else
                     debugmessage += description + " " + code;
@@ -207,7 +207,7 @@ var APP = APP || {};
             console.log(consolemessage.replace(/<\/?span[^>]*>/g, "").replace(/<br \/>/g, "\n            ").replace(/&nbsp;/g, " "));
             consolemessage = null;
         }
-        if (DEBUG_TO_CONSOLE === true && (severity !== undefined || /error/i.test(description))) {
+        if (DEBUG_TO_CONSOLE === true && (severity || description && /error/i.test(description))) {
             APP.setDebugMode(true);
         }
         if (DEBUG_MODE === true || DEBUG_TO_CONSOLE === true && console && console.log) {
@@ -249,13 +249,11 @@ var APP = APP || {};
     }
     function init() {
         var stylesheet = document.createElement('style'), span = document.createElement('span');
-        span["aria-hidden"] = true;
         span.appendChild(document.createTextNode("\u2A2F")); //times symbol
         HIDE_DEBUG_BUTTON = document.createElement('button');
         HIDE_DEBUG_BUTTON.id = "hideDebug";
         HIDE_DEBUG_BUTTON.type = "button";
-        HIDE_DEBUG_BUTTON.class = "close";
-        HIDE_DEBUG_BUTTON["aria-label"] = "Close debug window";
+        HIDE_DEBUG_BUTTON.className = "close";
         HIDE_DEBUG_BUTTON.appendChild(span);
         DEBUG_MESSAGE_DIV = document.createElement('div');
         DEBUG_MESSAGE_DIV.id = "debugMsg";
@@ -325,12 +323,14 @@ var APP = APP || {};
         if (DEBUG_MODE === true)
             APP.debug(code, description, severity);
         else {
-            ERROR_CACHE[CACHE_MSG_INDEX] = [code, description, severity, timeStamp(new Date())];
+            ERROR_CACHE[CACHE_MSG_INDEX] = [timeStamp(new Date()), code, description, severity];
             CACHE_MSG_INDEX++;
         }
     };
     /*prints a message to div called #debugMsg, like console.log*/
     APP.debug = function (code, description, severity) {
+        if (!INITIATED)
+            return;
         var d = new Date();
         if (DEBUG_STOP === true && d.getTime() - DEBUG_TIME > 5000) {
             DEBUG_COUNT = 0;
@@ -344,7 +344,7 @@ var APP = APP || {};
             DEBUG_STOP = true;
         }
         if (DEBUG_STOP === false) {
-            _debug(code, description, severity, timeStamp(d));
+            _debug(timeStamp(d), code, description, severity);
         }
         d = null;
     };
