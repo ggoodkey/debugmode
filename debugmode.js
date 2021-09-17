@@ -76,6 +76,8 @@ var APP = APP || {};
                     str = span("date", val);
                 else if (val instanceof Array)
                     str = print_Array(val);
+                else if (val instanceof Error)
+                    str = span("error", val.name + ": " + val.message, val.stack);
                 else
                     str = span("text", "{ " + print_Obj(val) + " }");
             }
@@ -219,6 +221,8 @@ var APP = APP || {};
                 code = span('date', code);
             else if (code === null || code === undefined)
                 code = print_Val(code);
+            else if (code instanceof Error)
+                code = span("error", code.name + ": " + code.message, code.stack);
             else if (typeof code === "object")
                 code = span('object', "{ " + to_Readable_JSON(print_Obj(code)) + " }");
             else

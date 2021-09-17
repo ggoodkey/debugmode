@@ -79,7 +79,7 @@ var APP: GlobalAppFunctions = APP! || {};
 			else if (typeof val === "object") {
 				if (val instanceof Date) str = span("date", val);
 				else if (val instanceof Array) str = print_Array(val);
-				else if (val instanceof Error) str = span("error", val.name + ": " + val.message);
+				else if (val instanceof Error) str = span("error", val.name + ": " + val.message, val.stack);
 				else str = span("text", "{ " + print_Obj(val) + " }");
 			}
 			else str = span("error", "???: " + val);
@@ -210,6 +210,7 @@ var APP: GlobalAppFunctions = APP! || {};
 			else if (code instanceof Function) code = span('function', 'function() {...}');
 			else if (code instanceof Date) code = span('date', code);
 			else if (code === null || code === undefined) code = print_Val(code);
+			else if (code instanceof Error) code = span("error", code.name + ": " + code.message, code.stack);
 			else if (typeof code === "object") code = span('object', "{ " + to_Readable_JSON(print_Obj(code)) + " }");
 			else code = print_Val(code);
 		}
