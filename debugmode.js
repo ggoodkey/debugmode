@@ -3,12 +3,12 @@ var APP;
 (function (APP) {
     function changeDebugMode() {
         if (DEBUG_MODE === true) {
-            this.debug("Debug Mode turned off");
-            this.setDebugMode(false);
+            APP.debug("Debug Mode turned off");
+            APP.setDebugMode(false);
         }
         else {
-            this.setDebugMode(true);
-            this.debug("Debug Mode turned on");
+            APP.setDebugMode(true);
+            APP.debug("Debug Mode turned on");
         }
     }
     function moveDebugWindow() {
@@ -210,7 +210,7 @@ var APP;
             consolemessage = null;
         }
         if (DEBUG_TO_CONSOLE === true && (severity || description && /error/i.test(description))) {
-            this.setDebugMode(true);
+            APP.setDebugMode(true);
         }
         if (DEBUG_MODE === true || DEBUG_TO_CONSOLE === true && console && console.log) {
             if (code instanceof Array)
@@ -286,7 +286,10 @@ var APP;
             HTML_TAG.className = trim(HTML_TAG.className.replace(/debugmodeOn|debugShowLarge|debugShowSmall/g, ""));
     }
     var DEBUG_COUNT = 0, DEBUG_TIME = new Date().getTime(), DEBUG_STOP = false, DEBUG_MODE = false, DEBUG_TO_CONSOLE = false, ERROR_CACHE = [], CACHE_MSG_INDEX = 0, INITIATED = false, HIDE_DEBUG_BUTTON, DEBUG_DIV, DEBUG_MESSAGE_DIV, HTML_TAG = document.getElementsByTagName("html")[0];
-    /** toggles debugmode on or off */
+    /** toggles debugmode on or off
+     * @param { boolean } debugMode true = on, false = off
+     * @returns { boolean } the set value of DEBUG_MODE
+     */
     function setDebugMode(debugMode) {
         if (debugMode === true) {
             if (!INITIATED)
@@ -304,12 +307,15 @@ var APP;
         }
         else {
             DEBUG_MODE = true;
-            this.debug(debugMode, "Error: Cannot set DebugMode to", true);
+            APP.debug(debugMode, "Error: Cannot set DebugMode to", true);
         }
         return DEBUG_MODE;
     }
     APP.setDebugMode = setDebugMode;
-    /** toggles debugging to the console on or off */
+    /** toggles debugging to the console on or off
+     * @param { boolean } debugMode true = on, false = off
+     * @returns { boolean } the set value of DEBUG_TO_CONSOLE
+     */
     function setDebugToConsole(debugMode) {
         if (debugMode === true) {
             if (!INITIATED)
@@ -329,22 +335,32 @@ var APP;
         }
         else {
             DEBUG_TO_CONSOLE = true;
-            this.debug(debugMode, "Error: Cannot set DebugToConsole to", true);
+            APP.debug(debugMode, "Error: Cannot set DebugToConsole to", true);
         }
         return DEBUG_TO_CONSOLE;
     }
     APP.setDebugToConsole = setDebugToConsole;
-    /** cache a debug message to be displayed later, if and when debugmode is turned on */
+    /** cache a debug message to be displayed later, if and when debugmode is turned on
+     * @param { any } code the item to inspect, can be of any type
+     * @param { string } [description] a name or description of the item being inspected
+     * @param { boolean } [severity] whether or not this is an error message
+     * @returns { void }
+     */
     function cacheMsg(code, description, severity) {
         if (DEBUG_MODE === true)
-            this.debug(code, description, severity);
+            APP.debug(code, description, severity);
         else {
             ERROR_CACHE[CACHE_MSG_INDEX] = [timeStamp(new Date()), code, description, severity];
             CACHE_MSG_INDEX++;
         }
     }
     APP.cacheMsg = cacheMsg;
-    /** display the contents of a variable, object, number, string, array, function etc., on screen and/or to the console */
+    /** display the contents of a variable, object, number, string, array, function etc., on screen and/or to the console
+     * @param { any } code the item to inspect, can be of any type
+     * @param { string } [description] a name or description of the item being inspected
+     * @param { boolean } [severity] whether or not this is an error message
+     * @returns { void }
+     */
     function debug(code, description, severity) {
         if (!INITIATED)
             return;

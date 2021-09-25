@@ -1,12 +1,12 @@
 namespace APP {
 	function changeDebugMode() {
 		if (DEBUG_MODE === true) {
-			this.debug("Debug Mode turned off");
-			this.setDebugMode(false);
+			APP.debug("Debug Mode turned off");
+			APP.setDebugMode(false);
 		}
 		else {
-			this.setDebugMode(true);
-			this.debug("Debug Mode turned on");
+			APP.setDebugMode(true);
+			APP.debug("Debug Mode turned on");
 		}
 	}
 	function moveDebugWindow() {
@@ -188,7 +188,7 @@ namespace APP {
 			consolemessage = null!;
 		}
 		if (DEBUG_TO_CONSOLE === true && (severity || description && /error/i.test(description))) {
-			this.setDebugMode(true);
+			APP.setDebugMode(true);
 		}
 		if (DEBUG_MODE === true || DEBUG_TO_CONSOLE === true && console && console.log) {
 			if (code instanceof Array) code = to_Readable_JSON(print_Array(code));
@@ -270,8 +270,11 @@ namespace APP {
 		DEBUG_DIV: HTMLDivElement,
 		DEBUG_MESSAGE_DIV: HTMLDivElement,
 		HTML_TAG: HTMLElement = document.getElementsByTagName("html")[0];
-	
-	/** toggles debugmode on or off */
+
+	/** toggles debugmode on or off
+	 * @param { boolean } debugMode true = on, false = off
+	 * @returns { boolean } the set value of DEBUG_MODE
+	 */
 	export function setDebugMode(debugMode: boolean): boolean {
 		if (debugMode === true) {
 			if (!INITIATED) init();
@@ -288,12 +291,15 @@ namespace APP {
 		}
 		else {
 			DEBUG_MODE = true;
-			this.debug(debugMode, "Error: Cannot set DebugMode to", true);
+			APP.debug(debugMode, "Error: Cannot set DebugMode to", true);
 		}
 		return DEBUG_MODE;
 	}
 
-	/** toggles debugging to the console on or off */
+	/** toggles debugging to the console on or off 
+	 * @param { boolean } debugMode true = on, false = off
+	 * @returns { boolean } the set value of DEBUG_TO_CONSOLE
+	 */
 	export function setDebugToConsole(debugMode: boolean): boolean {
 		if (debugMode === true) {
 			if (!INITIATED) init();
@@ -312,21 +318,31 @@ namespace APP {
 		}
 		else {
 			DEBUG_TO_CONSOLE = true;
-			this.debug(debugMode, "Error: Cannot set DebugToConsole to", true);
+			APP.debug(debugMode, "Error: Cannot set DebugToConsole to", true);
 		}
 		return DEBUG_TO_CONSOLE;
 	}
 
-	/** cache a debug message to be displayed later, if and when debugmode is turned on */
+	/** cache a debug message to be displayed later, if and when debugmode is turned on
+	 * @param { any } code the item to inspect, can be of any type
+	 * @param { string } [description] a name or description of the item being inspected
+	 * @param { boolean } [severity] whether or not this is an error message
+	 * @returns { void }
+	 */
 	export function cacheMsg(code: any, description?: string, severity?: boolean): void {
-		if (DEBUG_MODE === true) this.debug(code, description, severity);
+		if (DEBUG_MODE === true) APP.debug(code, description, severity);
 		else {
 			ERROR_CACHE[CACHE_MSG_INDEX] = [timeStamp(new Date()), code, description, severity];
 			CACHE_MSG_INDEX++;
 		}
 	}
 
-	/** display the contents of a variable, object, number, string, array, function etc., on screen and/or to the console */
+	/** display the contents of a variable, object, number, string, array, function etc., on screen and/or to the console
+	 * @param { any } code the item to inspect, can be of any type
+	 * @param { string } [description] a name or description of the item being inspected
+	 * @param { boolean } [severity] whether or not this is an error message
+	 * @returns { void }
+	 */
 	export function debug(code: any, description?: string, severity?: boolean): void {
 		if (!INITIATED) return;
 		var d = new Date();
