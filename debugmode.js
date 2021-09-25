@@ -1,14 +1,14 @@
 "use strict";
-var APP = APP || {};
-(function () {
+var APP;
+(function (APP) {
     function changeDebugMode() {
         if (DEBUG_MODE === true) {
-            APP.debug("Debug Mode turned off");
-            APP.setDebugMode(false);
+            this.debug("Debug Mode turned off");
+            this.setDebugMode(false);
         }
         else {
-            APP.setDebugMode(true);
-            APP.debug("Debug Mode turned on");
+            this.setDebugMode(true);
+            this.debug("Debug Mode turned on");
         }
     }
     function moveDebugWindow() {
@@ -210,7 +210,7 @@ var APP = APP || {};
             consolemessage = null;
         }
         if (DEBUG_TO_CONSOLE === true && (severity || description && /error/i.test(description))) {
-            APP.setDebugMode(true);
+            this.setDebugMode(true);
         }
         if (DEBUG_MODE === true || DEBUG_TO_CONSOLE === true && console && console.log) {
             if (code instanceof Array)
@@ -286,7 +286,8 @@ var APP = APP || {};
             HTML_TAG.className = trim(HTML_TAG.className.replace(/debugmodeOn|debugShowLarge|debugShowSmall/g, ""));
     }
     var DEBUG_COUNT = 0, DEBUG_TIME = new Date().getTime(), DEBUG_STOP = false, DEBUG_MODE = false, DEBUG_TO_CONSOLE = false, ERROR_CACHE = [], CACHE_MSG_INDEX = 0, INITIATED = false, HIDE_DEBUG_BUTTON, DEBUG_DIV, DEBUG_MESSAGE_DIV, HTML_TAG = document.getElementsByTagName("html")[0];
-    APP.setDebugMode = function (debugMode) {
+    /** toggles debugmode on or off */
+    function setDebugMode(debugMode) {
         if (debugMode === true) {
             if (!INITIATED)
                 init();
@@ -303,36 +304,48 @@ var APP = APP || {};
         }
         else {
             DEBUG_MODE = true;
-            APP.debug(debugMode, "Error: Cannot set DebugMode to", true);
+            this.debug(debugMode, "Error: Cannot set DebugMode to", true);
         }
         return DEBUG_MODE;
-    };
-    APP.setDebugToConsole = function (debugMode) {
+    }
+    APP.setDebugMode = setDebugMode;
+    /** toggles debugging to the console on or off */
+    function setDebugToConsole(debugMode) {
         if (debugMode === true) {
+            if (!INITIATED)
+                init();
             DEBUG_TO_CONSOLE = debugMode;
             while (CACHE_MSG_INDEX-- > 0) {
                 _debug.apply(null, ERROR_CACHE[CACHE_MSG_INDEX]);
             }
             ERROR_CACHE = [];
         }
-        else if (debugMode === false)
+        else if (debugMode === false) {
             DEBUG_TO_CONSOLE = debugMode;
+            if (DEBUG_MODE === false) {
+                destroy();
+                INITIATED = false;
+            }
+        }
         else {
             DEBUG_TO_CONSOLE = true;
-            APP.debug(debugMode, "Error: Cannot set DebugToConsole to", true);
+            this.debug(debugMode, "Error: Cannot set DebugToConsole to", true);
         }
         return DEBUG_TO_CONSOLE;
-    };
-    APP.cacheMsg = function (code, description, severity) {
+    }
+    APP.setDebugToConsole = setDebugToConsole;
+    /** cache a debug message to be displayed later, if and when debugmode is turned on */
+    function cacheMsg(code, description, severity) {
         if (DEBUG_MODE === true)
-            APP.debug(code, description, severity);
+            this.debug(code, description, severity);
         else {
             ERROR_CACHE[CACHE_MSG_INDEX] = [timeStamp(new Date()), code, description, severity];
             CACHE_MSG_INDEX++;
         }
-    };
-    /*prints a message to div called #debugMsg, like console.log*/
-    APP.debug = function (code, description, severity) {
+    }
+    APP.cacheMsg = cacheMsg;
+    /** display the contents of a variable, object, number, string, array, function etc., on screen and/or to the console */
+    function debug(code, description, severity) {
         if (!INITIATED)
             return;
         var d = new Date();
@@ -351,6 +364,7 @@ var APP = APP || {};
             _debug(timeStamp(d), code, description, severity);
         }
         d = null;
-    };
-}());
+    }
+    APP.debug = debug;
+})(APP || (APP = {}));
 //# sourceMappingURL=debugmode.js.map

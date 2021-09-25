@@ -1,27 +1,12 @@
-"use strict";
-interface GlobalAppFunctions {
-	/** toggles debugmode on or off */
-	setDebugMode: (debugMode: boolean) => boolean;
-
-	/** toggles debugging to the console on or off */
-	setDebugToConsole: (debugMode: boolean) => boolean;
-
-	/** cache a debug message to be displayed later, if and when debugmode is turned on */
-	cacheMsg: (code: any, description?: string, severity?: boolean) => void;
-
-	/** display the contents of a variable, object, number, string, array, function etc., on screen and/or to the console */
-	debug: (code: any, description?: string, severity?: boolean) => void;
-}
-var APP: GlobalAppFunctions = APP! || {};
-(function () {
+namespace APP {
 	function changeDebugMode() {
 		if (DEBUG_MODE === true) {
-			APP.debug("Debug Mode turned off");
-			APP.setDebugMode(false);
+			this.debug("Debug Mode turned off");
+			this.setDebugMode(false);
 		}
 		else {
-			APP.setDebugMode(true);
-			APP.debug("Debug Mode turned on");
+			this.setDebugMode(true);
+			this.debug("Debug Mode turned on");
 		}
 	}
 	function moveDebugWindow() {
@@ -164,7 +149,7 @@ var APP: GlobalAppFunctions = APP! || {};
 			}
 			return out;
 		}
-		function print_Obj(obj: {[key: string]: any}) {
+		function print_Obj(obj: { [key: string]: any }) {
 			var pairs: string[] = [], a = 0, val;
 			for (let key in obj) {
 				val = obj[key];
@@ -203,7 +188,7 @@ var APP: GlobalAppFunctions = APP! || {};
 			consolemessage = null!;
 		}
 		if (DEBUG_TO_CONSOLE === true && (severity || description && /error/i.test(description))) {
-			APP.setDebugMode(true);
+			this.setDebugMode(true);
 		}
 		if (DEBUG_MODE === true || DEBUG_TO_CONSOLE === true && console && console.log) {
 			if (code instanceof Array) code = to_Readable_JSON(print_Array(code));
@@ -284,9 +269,10 @@ var APP: GlobalAppFunctions = APP! || {};
 		HIDE_DEBUG_BUTTON: HTMLButtonElement,
 		DEBUG_DIV: HTMLDivElement,
 		DEBUG_MESSAGE_DIV: HTMLDivElement,
-		HTML_TAG:HTMLElement = document.getElementsByTagName("html")[0];
-
-	APP.setDebugMode = function (debugMode: boolean): boolean {
+		HTML_TAG: HTMLElement = document.getElementsByTagName("html")[0];
+	
+	/** toggles debugmode on or off */
+	export function setDebugMode(debugMode: boolean): boolean {
 		if (debugMode === true) {
 			if (!INITIATED) init();
 			DEBUG_MODE = debugMode;
@@ -302,34 +288,46 @@ var APP: GlobalAppFunctions = APP! || {};
 		}
 		else {
 			DEBUG_MODE = true;
-			APP.debug(debugMode, "Error: Cannot set DebugMode to", true);
+			this.debug(debugMode, "Error: Cannot set DebugMode to", true);
 		}
 		return DEBUG_MODE;
-	};
-	APP.setDebugToConsole = function (debugMode: boolean): boolean {
+	}
+
+	/** toggles debugging to the console on or off */
+	export function setDebugToConsole(debugMode: boolean): boolean {
 		if (debugMode === true) {
+			if (!INITIATED) init();
 			DEBUG_TO_CONSOLE = debugMode;
 			while (CACHE_MSG_INDEX-- > 0) {
 				_debug.apply(null, ERROR_CACHE[CACHE_MSG_INDEX]);
 			}
 			ERROR_CACHE = [];
 		}
-		else if (debugMode === false) DEBUG_TO_CONSOLE = debugMode;
+		else if (debugMode === false) {
+			DEBUG_TO_CONSOLE = debugMode;
+			if (DEBUG_MODE === false) {
+				destroy();
+				INITIATED = false;
+			}
+		}
 		else {
 			DEBUG_TO_CONSOLE = true;
-			APP.debug(debugMode, "Error: Cannot set DebugToConsole to", true);
+			this.debug(debugMode, "Error: Cannot set DebugToConsole to", true);
 		}
 		return DEBUG_TO_CONSOLE;
-	};
-	APP.cacheMsg = function (code: any, description?: string, severity?: boolean): void {
-		if (DEBUG_MODE === true) APP.debug(code, description, severity);
+	}
+
+	/** cache a debug message to be displayed later, if and when debugmode is turned on */
+	export function cacheMsg(code: any, description?: string, severity?: boolean): void {
+		if (DEBUG_MODE === true) this.debug(code, description, severity);
 		else {
 			ERROR_CACHE[CACHE_MSG_INDEX] = [timeStamp(new Date()), code, description, severity];
 			CACHE_MSG_INDEX++;
 		}
-	};
-	/*prints a message to div called #debugMsg, like console.log*/
-	APP.debug = function (code: any, description?: string, severity?: boolean): void {
+	}
+
+	/** display the contents of a variable, object, number, string, array, function etc., on screen and/or to the console */
+	export function debug(code: any, description?: string, severity?: boolean): void {
 		if (!INITIATED) return;
 		var d = new Date();
 		if (DEBUG_STOP === true && d.getTime() - DEBUG_TIME > 5000) {
@@ -347,5 +345,5 @@ var APP: GlobalAppFunctions = APP! || {};
 			_debug(timeStamp(d), code, description, severity);
 		}
 		d = null!;
-	};
-}());
+	}
+}
