@@ -29,7 +29,7 @@ Access functions via the namespace `APP`, i.e. `APP.debug`.
 
 ### The JavaScript Module Import Method
 The more modern method to include a JavaScript file is to use JavaScript modules. Include the debugmode.min.js
-file from the [/modules](https://www.github.com/ggoodkey/debugmode/modules) folder in your project. Then load the file using an `import` statement.
+file from the [/modules](https://github.com/ggoodkey/debugmode/tree/master/modules) folder in your project. Then load the file using an `import` statement.
 
 ```HTML
 <!--index.html--> 
@@ -64,7 +64,8 @@ APP.debug(whatsThis, "This is where you put a description of the item you are in
 var debug = APP.debug; // recommended shortform access to APP.debug
 ```
 
-> Note: If you are using Typescript or JavaScript Modules method, you need to add the import statement, and then you can access functions directly without using the `APP` namespace.
+or
+
 ```javascript
 //main.js
 
@@ -74,7 +75,9 @@ import { setDebugMode, debug } from './scripts/debugmode.js'
 setDebugMode(true); //set to true to use the debugger during development
 debug(whatsThis, "This is where you put a description of the item you are inspecting", true);
 ```
-Unlike `console.log`, you can't pass an unlimited number of arguments to `debug`, but it does accept 
+> Note: The rest of the examples show the `APP` namespace preceeding each function call. Remember to remove that if you are using Modules.
+
+Unlike `console.log`, you can't pass an unlimited number of arguments to `APP.debug`, but it does accept 
 up to 3. The first can be anything such as a string, number, object, array, function, date object, 
 etc. The second accepts a string, which is used for a description. And the 3rd is to indicate that 
 this is an error state. Alternately, the word 'error' anywhere in the description will mark the item 
