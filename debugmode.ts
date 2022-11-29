@@ -165,10 +165,9 @@ namespace APP {
 		}
 		function toDebugDiv() {
 			if (!/debugmodeOn/.test(HTML_TAG.className)) HTML_TAG.className = HTML_TAG.className + " debugmodeOn";
-			var debugmessage = "<span class='debug-timestamp'>";
+var debugmessage = "<span class='debug-timestamp'>";
 			debugmessage += timestamp;
-			debugmessage += "    </span><br />&nbsp;&nbsp;";
-			if (description) {
+			debugmessage += "</span><br />&nbsp;&nbsp;";			if (description) {
 				if (severity || /error/i.test(description))
 					debugmessage += span("error", description + " " + code);
 				else debugmessage += description + " " + code;
@@ -181,10 +180,10 @@ namespace APP {
 		}
 		function toConsole() {
 			var consolemessage = timestamp;
-			if (description) consolemessage += "   " + description + ":\n         ";
+			if (description) consolemessage += "   " + description + ": ";
 			consolemessage += "   ";
 			consolemessage += code;
-			console.log(consolemessage.replace(/<\/?span[^>]*>/g, "").replace(/<br \/>/g, "\n            ").replace(/&nbsp;/g, " "));
+			console.log(consolemessage.replace(/<\/?span[^>]*>/g, "").replace(/<br \/>/g, " ").replace(/&nbsp;/g, " "));
 			consolemessage = null!;
 		}
 		if (DEBUG_TO_CONSOLE === true && (severity || description && /error/i.test(description))) {
@@ -200,7 +199,7 @@ namespace APP {
 			else code = print_Val(code);
 		}
 		if (DEBUG_MODE === true) toDebugDiv();
-		if (DEBUG_TO_CONSOLE === true && console && console.log) toConsole();
+		if (DEBUG_TO_CONSOLE === true && console) toConsole();
 		code = null!; description = null!;
 	}
 	function trim(str: string) {
@@ -241,7 +240,7 @@ namespace APP {
 
 		stylesheet.type = 'text/css';
 		// eslint-disable-next-line
-		stylesheet.innerText = "#debug{display:none} #hideDebug{padding:6px 10px;color:red;position:fixed} html.debugShowLarge #hideDebug{left:25%;right:auto;right:initial} html.debugShowLarge #debug.debugRight #hideDebug{left:auto;left:initial;right:22px} html.debugShowSmall #hideDebug {left:auto;left:initial;right:12px} html.debugmodeOn #debug{color:#eee;background-color:#111;background-color:rgba(0,0,0,0.7);text-shadow:0 0 2px #000;font-family:Consolas,Courier New,Courier,monospace;position:fixed;top:0;left:0;right:auto;right:initial;width:30%;max-width:400px;height:100%;-ms-word-wrap:break-word;word-wrap:break-word;overflow:auto;visibility:visible;display:block;z-index:1099} html.debugmodeOn #debug.debugRight{left:auto;left:initial;right:0} html.debugShowSmall #debug{position:fixed;width:100%;max-width:100%;height:45%;top:auto;top:initial;bottom:0} html.debugShowSmall #debug.debugRight{top:0;bottom:auto;bottom:initial} .debug-object{color:cyan} .debug-function{color:magenta} .debug-error{color:red} .debug-string{color:lightblue} .debug-boolean{color:lightgreen} .debug-date{color:pink} .debug-number{color:yellow} .debug-text{color:white} .debug-array{color:orange} .debug-timestamp{color:#CCC;font-size:0.75em}";
+		stylesheet.innerText = "#debug{display:none} #hideDebug{padding:6px 10px;color:red;position:fixed;z-index:1;background-color:transparent;border:1px solid transparent} html.debugShowLarge #hideDebug{left:25%;right:auto;right:initial} html.debugShowLarge #debug.debugRight #hideDebug{left:auto;left:initial;right:22px} html.debugShowSmall #hideDebug {left:auto;left:initial;right:12px} html.debugmodeOn #debug{color:#eee;background-color:#111;background-color:rgba(0,0,0,0.7);text-shadow:0 0 2px #000;font-family:Consolas,Courier New,Courier,monospace;position:fixed;top:0;left:0;right:auto;right:initial;width:30%;max-width:400px;height:100%;-ms-word-wrap:break-word;word-wrap:break-word;overflow:auto;visibility:visible;display:block;z-index:1099} html.debugmodeOn #debug.debugRight{left:auto;left:initial;right:0} html.debugShowSmall #debug{position:fixed;width:100%;max-width:100%;height:45%;top:auto;top:initial;bottom:0} html.debugShowSmall #debug.debugRight{top:0;bottom:auto;bottom:initial} .debug-object{color:cyan} .debug-function{color:magenta} .debug-error{color:red} .debug-string{color:lightblue} .debug-boolean{color:lightgreen} .debug-date{color:pink} .debug-number{color:yellow} .debug-text{color:white} .debug-array{color:orange} .debug-timestamp{color:#CCC;font-size:0.75em}";
 		document.head.appendChild(stylesheet);
 
 		window.document.body.insertBefore(DEBUG_DIV, window.document.body.firstChild);
@@ -296,7 +295,7 @@ namespace APP {
 		return DEBUG_MODE;
 	}
 
-	/** toggles debugging to the console on or off 
+	/** toggles debugging to the console on or off
 	 * @param { boolean } debugMode true = on, false = off
 	 * @returns { boolean } the set value of DEBUG_TO_CONSOLE
 	 */
