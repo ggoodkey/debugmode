@@ -115,14 +115,16 @@ To help quickly differentiate data types, a colour coding scheme has been implem
 Item|Text Colour
 ----|----
 Description|White
-Strings|Lightblue
+Strings|Light Blue
 Numbers|Yellow
-Booleans|Lightgreen
+Booleans|Light Green
 Arrays|Orange
 Objects|Cyan
 Functions|Magenta
 Dates|Pink
 Errors|Red
+Big Integers|Lime Green
+Symbols|Hot Pink
 
 ![debugmode colour formatting](img/debugmode-example.png)
 

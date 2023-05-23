@@ -34,31 +34,30 @@ function _debug(timestamp: string, code: any, description?: string, severity?: b
 			str += '"';
 		}
 		str += '>';
-		str += contents;
+		str += contents.toString();
 		str += '</span>';
 		return str;
 	}
 	function print_Val(val: any) {
 		var str = "";
 		if (val instanceof Function) str = span('function', 'function() {...}');
-		else if (typeof val === "number") {
-			if (val > 1500000000000 && val < 2000000000000) str = span('number', val, new Date(val).toString());
-			else str = span("number", val);
+		else if (typeof val === "number" && val > 16e11 && val < 2e12) {
+			//a number in this range could be a date
+			str = span('number', val, new Date(val).toString());
 		}
+		else if (typeof val === 'bigint') str = span(typeof val, val.toString() + 'n');
 		else if (val === null) str = span("error", "null");
 		else if (typeof val === "undefined") str = span("error", "undefined");
 		else if (typeof val === "string") {
 			if (val === "") str = span("error", 'Empty string: ("")');
 			else if (val === " ") str = span("error", 'A space: (" ")');
 			else {
-				val = val.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");//disarm character codes and html tags
+				//disarm character codes and html tags
+				val = val.replace(/[\u00A0-\u9999<>\&]/gim, function (i) { return '&#' + i.charCodeAt(0) + ';'; });
 				val = val.replace(/\r\n|\r|\n/g, span('text', 'NL') + '<br />');
 				str = span("string", val);
 			}
 			if (str.length > 5007) str = str.slice(0, 5000) + "</span>" + span("text", "...etc. etc. " + str.length / 5000 + " times");
-		}
-		else if (typeof val === "boolean") {
-			str = span("boolean", val);
 		}
 		else if (typeof val === "object") {
 			if (val instanceof Date) str = span("date", val);
@@ -66,7 +65,7 @@ function _debug(timestamp: string, code: any, description?: string, severity?: b
 			else if (val instanceof Error) str = span("error", val.name + ": " + val.message, val.stack);
 			else str = span("text", "{ " + print_Obj(val) + " }");
 		}
-		else str = span("error", "???: " + val);
+		else str = span(typeof val, val);
 		val = null!;
 		return str;
 	}
@@ -148,7 +147,7 @@ function _debug(timestamp: string, code: any, description?: string, severity?: b
 		}
 		return out;
 	}
-	function print_Obj(obj: { [key: string]: any }) {
+	function print_Obj(obj: { [key: string]: any }): string {
 		var pairs: string[] = [], a = 0, val;
 		for (let key in obj) {
 			val = obj[key];
@@ -176,18 +175,15 @@ function _debug(timestamp: string, code: any, description?: string, severity?: b
 		DEBUG_MESSAGE_DIV.innerHTML = debugmessage;
 		debugmessage = null!;
 	}
-	function toConsole() {
-		var consolemessage = timestamp;
-		if (description) consolemessage += "   " + description + ": ";
-		consolemessage += "   ";
-		consolemessage += code;
-		console.log(consolemessage.replace(/<\/?span[^>]*>/g, "").replace(/<br \/>/g, " ").replace(/&nbsp;/g, " "));
-		consolemessage = null!;
+	function toConsole(code: any) {
+		if (description) console.log(timestamp, description, code);
+		else console.log(timestamp, code);
 	}
 	if (DEBUG_TO_CONSOLE === true && (severity || description && /error/i.test(description))) {
 		setDebugMode(true);
 	}
-	if (DEBUG_MODE === true || DEBUG_TO_CONSOLE === true && console && console.log) {
+	if (DEBUG_TO_CONSOLE === true && console) toConsole(code);
+	if (DEBUG_MODE === true) {
 		if (code instanceof Array) code = to_Readable_JSON(print_Array(code));
 		else if (code instanceof Function) code = span('function', 'function() {...}');
 		else if (code instanceof Date) code = span('date', code);
@@ -195,9 +191,9 @@ function _debug(timestamp: string, code: any, description?: string, severity?: b
 		else if (code instanceof Error) code = span("error", code.name + ": " + code.message, code.stack);
 		else if (typeof code === "object") code = span('object', "{ " + to_Readable_JSON(print_Obj(code)) + " }");
 		else code = print_Val(code);
+		toDebugDiv();
 	}
-	if (DEBUG_MODE === true) toDebugDiv();
-	if (DEBUG_TO_CONSOLE === true && console) toConsole();
+
 	code = null!; description = null!;
 }
 function trim(str: string) {
@@ -238,7 +234,132 @@ function init() {
 
 	stylesheet.type = 'text/css';
 	// eslint-disable-next-line
-	stylesheet.innerText = "#debug{display:none} #hideDebug{padding:6px 10px;color:red;position:fixed;z-index:1;background-color:transparent;border:1px solid transparent} html.debugShowLarge #hideDebug{left:25%;right:auto;right:initial} html.debugShowLarge #debug.debugRight #hideDebug{left:auto;left:initial;right:22px} html.debugShowSmall #hideDebug {left:auto;left:initial;right:12px} html.debugmodeOn #debug{color:#eee;background-color:#111;background-color:rgba(0,0,0,0.7);text-shadow:0 0 2px #000;font-family:Consolas,Courier New,Courier,monospace;position:fixed;top:0;left:0;right:auto;right:initial;width:30%;max-width:400px;height:100%;-ms-word-wrap:break-word;word-wrap:break-word;overflow:auto;visibility:visible;display:block;z-index:1099} html.debugmodeOn #debug.debugRight{left:auto;left:initial;right:0} html.debugShowSmall #debug{position:fixed;width:100%;max-width:100%;height:45%;top:auto;top:initial;bottom:0} html.debugShowSmall #debug.debugRight{top:0;bottom:auto;bottom:initial} .debug-object{color:cyan} .debug-function{color:magenta} .debug-error{color:red} .debug-string{color:lightblue} .debug-boolean{color:lightgreen} .debug-date{color:pink} .debug-number{color:yellow} .debug-text{color:white} .debug-array{color:orange} .debug-timestamp{color:#CCC;font-size:0.75em}";
+	stylesheet.innerText = `
+
+	/* Style for debug panel */
+	#debug {
+		display: none
+	}
+
+	#hideDebug {
+		padding: 6px 10px;
+		color: red;
+		position: fixed;
+		z-index: 1;
+		background-color: transparent;
+		border: 1px solid transparent
+	}
+
+	html.debugShowLarge #hideDebug {
+		left: 25%;
+		right: auto;
+		right: initial
+	}
+
+	html.debugShowLarge #debug.debugRight #hideDebug {
+		left: auto;
+		left: initial;
+		right: 22px
+	}
+
+	html.debugShowSmall #hideDebug {
+		left: auto;
+		left: initial;
+		right: 12px
+	}
+
+	html.debugmodeOn #debug {
+		color: #eee;
+		background-color: #111;
+		background-color: rgba(0,0,0,0.7);
+		text-shadow: 0 0 2px #000;
+		font-family: Consolas, 'Courier New', Courier, monospace;
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: auto;
+		right: initial;
+		width: 30%;
+		max-width: 400px;
+		height: 100%;
+		-ms-word-wrap: break-word;
+		word-wrap: break-word;
+		overflow: auto;
+		visibility: visible;
+		display: block;
+		z-index: 1099
+	}
+
+	html.debugmodeOn #debug.debugRight {
+		left: auto;
+		left: initial;
+		right: 0
+	}
+
+	html.debugShowSmall #debug {
+		position: fixed;
+		width: 100%;
+		max-width: 100%;
+		height: 45%;
+		top: auto;
+		top: initial;
+		bottom: 0
+	}
+
+	html.debugShowSmall #debug.debugRight {
+		top: 0;
+		bottom: auto;
+		bottom: initial
+	}
+
+	.debug-object {
+		color: cyan
+	}
+
+	.debug-function {
+		color: magenta
+	}
+
+	.debug-error {
+		color: red
+	}
+
+	.debug-string {
+		color: lightblue
+	}
+
+	.debug-boolean {
+		color: lightgreen
+	}
+
+	.debug-date {
+		color: pink
+	}
+
+	.debug-number {
+		color: yellow
+	}
+
+	.debug-text {
+		color: white
+	}
+
+	.debug-array {
+		color: orange
+	}
+
+	.debug-bigint {
+		color: limegreen
+	}
+
+	.debug-symbol {
+		color: hotpink
+	}
+
+	.debug-timestamp {
+		color: #CCC;
+		font-size:0.75em
+	}`;
 	document.head.appendChild(stylesheet);
 
 	window.document.body.insertBefore(DEBUG_DIV, window.document.body.firstChild);
