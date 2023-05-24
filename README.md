@@ -27,55 +27,22 @@ file to load it into your project and start debugging.
 ```
 Access functions via the namespace `APP`, i.e. `APP.debug`.
 
-### The JavaScript Module Import Method
-The more modern method to include a JavaScript file is to use JavaScript modules. Include the debugmode.min.js
-file from the [/modules](https://github.com/ggoodkey/debugmode/tree/master/modules) folder in your project. Then load the file using an `import` statement.
-
-```HTML
-<!--index.html--> 
-<script type="module" src="[path/to]/main.js"></script>
-```
-
-```JavaScript
-// main.js
-import { debug, setDebugMode, setDebugToConsole, cacheMsg } from '[path/to/scripts]/debugmode.min.js'
-```
-> Note: A limitation of using JavaScript modules is you will need to serve the file from a server (such as localhost:// or https://, not file://).
-
-### The Typescript Module Import Method
-Typescript follows the same pattern as JavaScript modules, except you can incude the .ts file instead of the .min.js file.
-```Typescript
-// main.ts
-import { debug, setDebugMode, setDebugToConsole, cacheMsg } from '[path/to/scripts]/debugmode'
-```
-Then run the Typescript compiler to compile your own JavaScript files.
+### The Module Import Method
+If you are using modules, see the [/modules folder](./modules/README.md), for details on importing and using debugmode as a module.
 
 ## The functions
+The `APP` namespace contains 4 functions:
 
 #### `APP.setDebugMode` and `APP.debug`
 
 ```javascript
 //main.js
 
-//Using the Script Tag method
 APP.setDebugMode(true); //set to true to use the debugger during development
 APP.debug(whatsThis, "This is where you put a description of the item you are inspecting", true);
 
 var debug = APP.debug; // recommended shortform access to APP.debug
 ```
-
-or
-
-```javascript
-//main.js
-
-//Using the JavaScript Modules method
-import { setDebugMode, debug } from './scripts/debugmode.js'
-
-setDebugMode(true); //set to true to use the debugger during development
-debug(whatsThis, "This is where you put a description of the item you are inspecting", true);
-```
-> Note: The rest of the examples show the `APP` namespace preceeding each function call. Remember to remove that if you are using Modules.
 
 Unlike `console.log`, you can't pass an unlimited number of arguments to `APP.debug`, but it does accept 
 up to 3. The first can be anything such as a string, number, object, array, function, date object, 
