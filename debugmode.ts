@@ -1,5 +1,6 @@
 namespace APP {
-	function changeDebugMode() {
+	function changeDebugMode(e: MouseEvent) {
+		if (e) e.stopPropagation();
 		if (DEBUG_MODE === true) {
 			APP.debug("Debug Mode turned off");
 			APP.setDebugMode(false);
@@ -214,40 +215,70 @@ namespace APP {
 		HTML_TAG.className = trim(type + HTML_TAG.className.replace(/debugShowLarge|debugShowSmall/g, ""));
 	}
 	function init() {
-		var stylesheet = document.createElement('style'),
-			span = document.createElement('span');
+		var stylesheet = document.createElement('style');
 
-		span.appendChild(document.createTextNode("\u2A2F"));//times symbol
+		DEBUG_BUTTONS = document.createElement('div');
+		DEBUG_BUTTONS.id = "debugButtons";
+
+		CLEAR_DEBUG_BUTTON = document.createElement('button');
+		CLEAR_DEBUG_BUTTON.id = "clearDebug";
+		CLEAR_DEBUG_BUTTON.type = "button";
+		CLEAR_DEBUG_BUTTON.title = "Clear and Hide Debug Window";
+		CLEAR_DEBUG_BUTTON.appendChild(document.createTextNode("_"));
+
+		EXPAND_DEBUG_BUTTON = document.createElement('button');
+		EXPAND_DEBUG_BUTTON.id = "expandDebug";
+		EXPAND_DEBUG_BUTTON.type = "button";
+		EXPAND_DEBUG_BUTTON.title = "Toggle Fullscreen";
+		EXPAND_DEBUG_BUTTON.appendChild(document.createTextNode("\u25FB"));//square symbol
 
 		HIDE_DEBUG_BUTTON = document.createElement('button');
 		HIDE_DEBUG_BUTTON.id = "hideDebug";
 		HIDE_DEBUG_BUTTON.type = "button";
-		HIDE_DEBUG_BUTTON.className = "close";
-		HIDE_DEBUG_BUTTON.appendChild(span);
+		HIDE_DEBUG_BUTTON.title = "Close Debug Window";
+		HIDE_DEBUG_BUTTON.appendChild(document.createTextNode("\u2A2F"));//times symbol
 
 		DEBUG_MESSAGE_DIV = document.createElement('div');
 		DEBUG_MESSAGE_DIV.id = "debugMsg";
 
 		DEBUG_DIV = document.createElement('div');
 		DEBUG_DIV.id = "debug";
-		DEBUG_DIV.appendChild(HIDE_DEBUG_BUTTON);
+		DEBUG_BUTTONS.appendChild(CLEAR_DEBUG_BUTTON);
+		DEBUG_BUTTONS.appendChild(EXPAND_DEBUG_BUTTON);
+		DEBUG_BUTTONS.appendChild(HIDE_DEBUG_BUTTON);
+		DEBUG_DIV.appendChild(DEBUG_BUTTONS);
 		DEBUG_DIV.appendChild(DEBUG_MESSAGE_DIV);
 
 		layout();
 
 		stylesheet.type = 'text/css';
 		// eslint-disable-next-line
-		stylesheet.innerText = "#debug{display:none} #hideDebug{padding:6px 10px;color:red;position:fixed;z-index:1;background-color:transparent;border:1px solid transparent} html.debugShowLarge #hideDebug{left:25%;right:auto;right:initial} html.debugShowLarge #debug.debugRight #hideDebug{left:auto;left:initial;right:22px} html.debugShowSmall #hideDebug {left:auto;left:initial;right:12px} html.debugmodeOn #debug{color:#eee;background-color:#111;background-color:rgba(0,0,0,0.7);text-shadow:0 0 2px #000;font-family:Consolas,'Courier New',Courier,monospace;position:fixed;top:0;left:0;right:auto;right:initial;width:30%;max-width:400px;height:100%;-ms-word-wrap:break-word;word-wrap:break-word;overflow:auto;visibility:visible;display:block;z-index:1099} html.debugmodeOn #debug.debugRight{left:auto;left:initial;right:0} html.debugShowSmall #debug{position:fixed;width:100%;max-width:100%;height:45%;top:auto;top:initial;bottom:0} html.debugShowSmall #debug.debugRight{top:0;bottom:auto;bottom:initial} .debug-object{color:cyan} .debug-function{color:magenta} .debug-error{color:red} .debug-string{color:lightblue} .debug-boolean{color:lightgreen} .debug-date{color:pink} .debug-number{color:yellow} .debug-text{color:white} .debug-array{color:orange} .debug-bigint{color:limegreen} .debug-symbol{color:hotpink} .debug-timestamp{color:#CCC;font-size:0.75em}";
+		stylesheet.innerText = "#debug{display:none} #debugButtons{position:absolute;top:0;right:16px;z-index:1} #hideDebug, #expandDebug, #clearDebug{cursor:pointer;background-color:transparent;border:1px solid transparent;display:inline-block;vertical-align:middle;font-size:1em;font-weight:bold;font-family:Arial,sans-serif;padding:8px;} #hideDebug{font-size:1.3em} #expandDebug{font-size:1.1em} html.debugmodeOn #debug{color:#eee;background-color:#111;background-color:rgba(0,0,0,0.7);text-shadow:0 0 2px #000;font-family:Consolas,'Courier New',Courier,monospace;position:fixed;top:0;left:0;right:auto;right:initial;width:auto;min-width:25%;max-width:40%;height:100%;visibility:visible;display:block;z-index:1099} html.debugmodeOn #debugMsg{height:100%;width:100%;-ms-word-wrap:break-word;word-wrap:break-word;overflow:auto} html.debugmodeOn #debug.debugRight{left:auto;left:initial;right:0} html.debugShowSmall #debug{position:fixed;width:100%;max-width:100%;height:45%;top:auto;top:initial;bottom:0} html.debugShowSmall #debug.debugRight{top:0;bottom:auto;bottom:initial} html.debugmodeOn.debugExpanded #debug{width:100%;max-width:100%;height:100%} .debug-object{color:cyan} .debug-function{color:magenta} .debug-error{color:red} .debug-string{color:lightblue} .debug-boolean{color:lightgreen} .debug-date{color:pink} .debug-number{color:yellow} .debug-text{color:white} .debug-array{color:orange} .debug-bigint{color:limegreen} .debug-symbol{color:hotpink} .debug-timestamp{color:#CCC;font-size:0.75em}";
 		document.head.appendChild(stylesheet);
 
 		window.document.body.insertBefore(DEBUG_DIV, window.document.body.firstChild);
 
 		HIDE_DEBUG_BUTTON.addEventListener('click', changeDebugMode);
+		EXPAND_DEBUG_BUTTON.addEventListener('click', expandDebugWindow);
+		CLEAR_DEBUG_BUTTON.addEventListener('click', clearDebug);
 		DEBUG_DIV.addEventListener('click', moveDebugWindow);
 		INITIATED = true;
 	}
+	function expandDebugWindow(e: MouseEvent) {
+		if (e) e.stopPropagation();
+		if (!HTML_TAG) return;
+		if (/debugExpanded/.test(HTML_TAG.className)) HTML_TAG.className = trim(HTML_TAG.className.replace(/debugExpanded/g, ""));
+		else HTML_TAG.className = trim("debugExpanded " + HTML_TAG.className);
+	}
+	function clearDebug(e: MouseEvent) {
+		if (e) e.stopPropagation();
+		DEBUG_MESSAGE_DIV.innerHTML = "";
+		if (HTML_TAG) HTML_TAG.className = trim(HTML_TAG.className.replace(/debugmodeOn/g, ""));
+	}
 	function destroy() {
 		if (HIDE_DEBUG_BUTTON) HIDE_DEBUG_BUTTON.removeEventListener('click', changeDebugMode);
+		if (EXPAND_DEBUG_BUTTON) EXPAND_DEBUG_BUTTON.removeEventListener('click', expandDebugWindow);
+		if (CLEAR_DEBUG_BUTTON) CLEAR_DEBUG_BUTTON.removeEventListener('click', clearDebug);
 		if (DEBUG_DIV) {
 			DEBUG_DIV.removeEventListener('click', moveDebugWindow);
 			window.document.body.removeChild(DEBUG_DIV);
@@ -262,7 +293,10 @@ namespace APP {
 		ERROR_CACHE: [string, any, string?, boolean?][] = [],
 		CACHE_MSG_INDEX = 0,
 		INITIATED = false,
+		DEBUG_BUTTONS: HTMLDivElement,
 		HIDE_DEBUG_BUTTON: HTMLButtonElement,
+		EXPAND_DEBUG_BUTTON: HTMLButtonElement,
+		CLEAR_DEBUG_BUTTON: HTMLButtonElement,
 		DEBUG_DIV: HTMLDivElement,
 		DEBUG_MESSAGE_DIV: HTMLDivElement,
 		HTML_TAG: HTMLElement = document.getElementsByTagName("html")[0];

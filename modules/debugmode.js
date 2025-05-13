@@ -1,4 +1,6 @@
-function changeDebugMode() {
+function changeDebugMode(e) {
+    if (e)
+        e.stopPropagation();
     if (DEBUG_MODE === true) {
         debug("Debug Mode turned off");
         setDebugMode(false);
@@ -241,18 +243,32 @@ function layout() {
     HTML_TAG.className = trim(type + HTML_TAG.className.replace(/debugShowLarge|debugShowSmall/g, ""));
 }
 function init() {
-    var stylesheet = document.createElement('style'), span = document.createElement('span');
-    span.appendChild(document.createTextNode("\u2A2F")); //times symbol
+    var stylesheet = document.createElement('style');
+    DEBUG_BUTTONS = document.createElement('div');
+    DEBUG_BUTTONS.id = "debugButtons";
+    CLEAR_DEBUG_BUTTON = document.createElement('button');
+    CLEAR_DEBUG_BUTTON.id = "clearDebug";
+    CLEAR_DEBUG_BUTTON.type = "button";
+    CLEAR_DEBUG_BUTTON.title = "Clear and Hide Debug Window";
+    CLEAR_DEBUG_BUTTON.appendChild(document.createTextNode("_"));
+    EXPAND_DEBUG_BUTTON = document.createElement('button');
+    EXPAND_DEBUG_BUTTON.id = "expandDebug";
+    EXPAND_DEBUG_BUTTON.type = "button";
+    EXPAND_DEBUG_BUTTON.title = "Toggle Fullscreen";
+    EXPAND_DEBUG_BUTTON.appendChild(document.createTextNode("\u25FB")); //square symbol
     HIDE_DEBUG_BUTTON = document.createElement('button');
     HIDE_DEBUG_BUTTON.id = "hideDebug";
     HIDE_DEBUG_BUTTON.type = "button";
-    HIDE_DEBUG_BUTTON.className = "close";
-    HIDE_DEBUG_BUTTON.appendChild(span);
+    HIDE_DEBUG_BUTTON.title = "Close Debug Window";
+    HIDE_DEBUG_BUTTON.appendChild(document.createTextNode("\u2A2F")); //times symbol
     DEBUG_MESSAGE_DIV = document.createElement('div');
     DEBUG_MESSAGE_DIV.id = "debugMsg";
     DEBUG_DIV = document.createElement('div');
     DEBUG_DIV.id = "debug";
-    DEBUG_DIV.appendChild(HIDE_DEBUG_BUTTON);
+    DEBUG_BUTTONS.appendChild(CLEAR_DEBUG_BUTTON);
+    DEBUG_BUTTONS.appendChild(EXPAND_DEBUG_BUTTON);
+    DEBUG_BUTTONS.appendChild(HIDE_DEBUG_BUTTON);
+    DEBUG_DIV.appendChild(DEBUG_BUTTONS);
     DEBUG_DIV.appendChild(DEBUG_MESSAGE_DIV);
     layout();
     stylesheet.type = 'text/css';
@@ -261,34 +277,36 @@ function init() {
 
 	/* Style for debug panel */
 	#debug {
-		display: none
+		display: none;
+	}
+
+	#debugButtons {
+		position: absolute;
+		top: 0;
+		right: 16px;
+		z-index: 1;
+	}
+
+	#hideDebug,
+	#expandDebug, 
+	#clearDebug {
+		cursor: pointer;
+		background-color: transparent;
+		border: 1px solid transparent;
+		display: inline-block;
+		vertical-align: middle;
+		font-size: 1em;
+		font-weight: bold;
+		font-family: Arial, sans-serif;
+		padding: 8px;
 	}
 
 	#hideDebug {
-		padding: 6px 10px;
-		color: red;
-		position: fixed;
-		z-index: 1;
-		background-color: transparent;
-		border: 1px solid transparent
+		font-size: 1.3em;
 	}
 
-	html.debugShowLarge #hideDebug {
-		left: 25%;
-		right: auto;
-		right: initial
-	}
-
-	html.debugShowLarge #debug.debugRight #hideDebug {
-		left: auto;
-		left: initial;
-		right: 22px
-	}
-
-	html.debugShowSmall #hideDebug {
-		left: auto;
-		left: initial;
-		right: 12px
+	#expandDebug {
+		font-size: 1.1em;
 	}
 
 	html.debugmodeOn #debug {
@@ -302,21 +320,27 @@ function init() {
 		left: 0;
 		right: auto;
 		right: initial;
-		width: 30%;
-		max-width: 400px;
+		width: auto;
+		min-width: 25%;
+		max-width: 40%;
 		height: 100%;
+		visibility: visible;
+		display: block;
+		z-index: 1099;
+	}
+
+	html.debugmodeOn #debugMsg {
+		height: 100%;
+		width: 100%;
 		-ms-word-wrap: break-word;
 		word-wrap: break-word;
 		overflow: auto;
-		visibility: visible;
-		display: block;
-		z-index: 1099
 	}
 
 	html.debugmodeOn #debug.debugRight {
 		left: auto;
 		left: initial;
-		right: 0
+		right: 0;
 	}
 
 	html.debugShowSmall #debug {
@@ -326,72 +350,101 @@ function init() {
 		height: 45%;
 		top: auto;
 		top: initial;
-		bottom: 0
+		bottom: 0;
 	}
 
 	html.debugShowSmall #debug.debugRight {
 		top: 0;
 		bottom: auto;
-		bottom: initial
+		bottom: initial;
+	}
+
+	html.debugmodeOn.debugExpanded #debug {
+		width: 100%;
+		max-width: 100%;
+		height: 100%;
 	}
 
 	.debug-object {
-		color: cyan
+		color: cyan;
 	}
 
 	.debug-function {
-		color: magenta
+		color: magenta;
 	}
 
 	.debug-error {
-		color: red
+		color: red;
 	}
 
 	.debug-string {
-		color: lightblue
+		color: lightblue;
 	}
 
 	.debug-boolean {
-		color: lightgreen
+		color: lightgreen;
 	}
 
 	.debug-date {
-		color: pink
+		color: pink;
 	}
 
 	.debug-number {
-		color: yellow
+		color: yellow;
 	}
 
 	.debug-text {
-		color: white
+		color: white;
 	}
 
 	.debug-array {
-		color: orange
+		color: orange;
 	}
 
 	.debug-bigint {
-		color: limegreen
+		color: limegreen;
 	}
 
 	.debug-symbol {
-		color: hotpink
+		color: hotpink;
 	}
 
 	.debug-timestamp {
 		color: #CCC;
-		font-size:0.75em
+		font-size: 0.75em;
 	}`;
     document.head.appendChild(stylesheet);
     window.document.body.insertBefore(DEBUG_DIV, window.document.body.firstChild);
     HIDE_DEBUG_BUTTON.addEventListener('click', changeDebugMode);
+    EXPAND_DEBUG_BUTTON.addEventListener('click', expandDebugWindow);
+    CLEAR_DEBUG_BUTTON.addEventListener('click', clearDebug);
     DEBUG_DIV.addEventListener('click', moveDebugWindow);
     INITIATED = true;
+}
+function expandDebugWindow(e) {
+    if (e)
+        e.stopPropagation();
+    if (!HTML_TAG)
+        return;
+    if (/debugExpanded/.test(HTML_TAG.className))
+        HTML_TAG.className = trim(HTML_TAG.className.replace(/debugExpanded/g, ""));
+    else
+        HTML_TAG.className = trim("debugExpanded " + HTML_TAG.className);
+}
+function clearDebug(e) {
+    if (e)
+        e.stopPropagation();
+    DEBUG_MESSAGE_DIV.innerHTML = "";
+    if (HTML_TAG)
+        HTML_TAG.className = trim(HTML_TAG.className.replace(/debugmodeOn/g, ""));
 }
 function destroy() {
     if (HIDE_DEBUG_BUTTON)
         HIDE_DEBUG_BUTTON.removeEventListener('click', changeDebugMode);
+    if (EXPAND_DEBUG_BUTTON)
+        EXPAND_DEBUG_BUTTON.removeEventListener('click', expandDebugWindow);
+    if (CLEAR_DEBUG_BUTTON)
+        CLEAR_DEBUG_BUTTON.removeEventListener('click', clearDebug);
     if (DEBUG_DIV) {
         DEBUG_DIV.removeEventListener('click', moveDebugWindow);
         window.document.body.removeChild(DEBUG_DIV);
@@ -399,7 +452,7 @@ function destroy() {
     if (HTML_TAG)
         HTML_TAG.className = trim(HTML_TAG.className.replace(/debugmodeOn|debugShowLarge|debugShowSmall/g, ""));
 }
-var DEBUG_COUNT = 0, DEBUG_TIME = new Date().getTime(), DEBUG_STOP = false, DEBUG_MODE = false, DEBUG_TO_CONSOLE = false, ERROR_CACHE = [], CACHE_MSG_INDEX = 0, INITIATED = false, HIDE_DEBUG_BUTTON, DEBUG_DIV, DEBUG_MESSAGE_DIV, HTML_TAG = document.getElementsByTagName("html")[0];
+var DEBUG_COUNT = 0, DEBUG_TIME = new Date().getTime(), DEBUG_STOP = false, DEBUG_MODE = false, DEBUG_TO_CONSOLE = false, ERROR_CACHE = [], CACHE_MSG_INDEX = 0, INITIATED = false, DEBUG_BUTTONS, HIDE_DEBUG_BUTTON, EXPAND_DEBUG_BUTTON, CLEAR_DEBUG_BUTTON, DEBUG_DIV, DEBUG_MESSAGE_DIV, HTML_TAG = document.getElementsByTagName("html")[0];
 /** toggles debugmode on or off
  * @param { boolean } debugMode true = on, false = off
  * @returns { boolean } the set value of DEBUG_MODE
@@ -492,3 +545,4 @@ export function debug(code, description, severity) {
     }
     d = null;
 }
+//# sourceMappingURL=debugmode.js.map
