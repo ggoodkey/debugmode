@@ -86,12 +86,13 @@ Strings|Light Blue
 Numbers|Yellow
 Booleans|Light Green
 Arrays|Orange
-Objects|Cyan
+Objects|White
 Functions|Magenta
 Dates|Pink
 Errors|Red
 Big Integers|Lime Green
 Symbols|Hot Pink
+RegExp|Cyan
 
 ![debugmode colour formatting](img/debugmode-example.png)
 

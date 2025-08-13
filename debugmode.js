@@ -43,7 +43,7 @@ var APP;
             str += '</span>';
             return str;
         }
-        function print_Val(val) {
+        function print_Val(val, ancestors = []) {
             var str = "";
             if (val instanceof Function)
                 str = span('function', 'function() {...}');
@@ -75,23 +75,27 @@ var APP;
                 if (val instanceof Date)
                     str = span("date", val);
                 else if (val instanceof Array)
-                    str = print_Array(val);
+                    str = print_Array(val, ancestors);
                 else if (val instanceof Error)
                     str = span("error", val.name + ": " + val.message, val.stack);
+                else if (val instanceof RegExp)
+                    str = span("regexp", val.toString());
+                else if (val instanceof Symbol)
+                    str = span("symbol", val.toString());
                 else
-                    str = span("text", "{ " + print_Obj(val) + " }");
+                    str = span("object", "{ " + print_Obj(val, ancestors) + " }");
             }
             else
                 str = span(typeof val, val);
             val = null;
             return str;
         }
-        function print_Array(arr) {
+        function print_Array(arr, ancestors = []) {
             var values = [], len = arr.length;
             if (len === 0)
                 return span("array", '[ ' + span("error", "Empty array") + ' ]');
             for (var i = 0; i < len; i++)
-                values[i] = print_Val(arr[i]);
+                values[i] = print_Val(arr[i], ancestors);
             var str = span("array", '[ ' + values.join(", ") + ' ]');
             values = null;
             arr = null;
@@ -101,7 +105,7 @@ var APP;
             function enter() {
                 out += "<br />";
                 for (a = 0; a < tabDepth; a++) {
-                    out += "&nbsp;&nbsp;&nbsp;&nbsp;";
+                    out += "&nbsp;&nbsp;&nbsp;";
                 }
             }
             function getArrayDepth(position) {
@@ -139,7 +143,7 @@ var APP;
                 if (str[c] === '"' && prevChar !== "\\")
                     quote = !quote;
                 else if (!quote) {
-                    if (str[c] === "," /*&& (array === 0 || array < arrayDepth)*/) {
+                    if (str[c] === "," && (array === 0 || array < arrayDepth)) {
                         enter();
                         if (str[c + 1] === " ")
                             c++; //skip space
@@ -165,11 +169,20 @@ var APP;
             }
             return out;
         }
-        function print_Obj(obj) {
+        function print_Obj(obj, ancestors = []) {
+            var _a, _b;
             var pairs = [], a = 0, val;
+            if (ancestors.indexOf(obj) !== -1)
+                return span("error", "Circular reference");
+            ancestors.push(obj);
             for (let key in obj) {
                 val = obj[key];
-                pairs[a] = key + ': ' + print_Val(val);
+                if (typeof ((_a = Object.getOwnPropertyDescriptor(obj, key)) === null || _a === void 0 ? void 0 : _a.get) === "function" ||
+                    typeof ((_b = Object.getOwnPropertyDescriptor(obj, key)) === null || _b === void 0 ? void 0 : _b.set) === "function") {
+                    pairs[a] = key + " (getter/setter): " + span("function", print_Val(val, ancestors));
+                }
+                else
+                    pairs[a] = key + ': ' + print_Val(val, ancestors);
                 a++;
                 if (a > 25) {
                     pairs[a] = "continued....";
@@ -179,6 +192,7 @@ var APP;
             a = null;
             obj = null;
             val = null;
+            ancestors.pop();
             return pairs.join(",");
         }
         function toDebugDiv() {
@@ -278,7 +292,7 @@ var APP;
         layout();
         stylesheet.type = 'text/css';
         // eslint-disable-next-line
-        stylesheet.innerText = "#debug{display:none}#debugButtons{position:absolute;top:0;right:16px;z-index:1}#hideDebug,#expandDebug,#clearDebug{cursor:pointer;background-color:transparent;border:1px solid transparent;display:inline-block;vertical-align:middle;font-size:1em;font-weight:bold;font-family:Arial,sans-serif;padding:8px;}#hideDebug{font-size:1.3em}#expandDebug{font-size:1.1em}html.debugmodeOn #debug{color:#eee;background-color:#111;background-color:rgba(0,0,0,0.7);text-shadow:0 0 2px #000;font-family:Consolas,'Courier New',Courier,monospace;position:fixed;top:0;left:0;right:auto;right:initial;width:auto;min-width:25%;max-width:40%;height:100%;visibility:visible;display:block;z-index:1099}html.debugmodeOn #debugMsg{height:100%;width:100%;-ms-word-wrap:break-word;word-wrap:break-word;overflow:auto}html.debugmodeOn #debug.debugRight{left:auto;left:initial;right:0}html.debugShowSmall #debug{position:fixed;width:100%;max-width:100%;height:45%;top:auto;top:initial;bottom:0}html.debugShowSmall #debug.debugRight{top:0;bottom:auto;bottom:initial}html.debugmodeOn.debugExpanded #debug{width:100%;max-width:100%;height:100%}.debug-object{color:cyan}.debug-function{color:magenta}.debug-error{color:red}.debug-string{color:lightblue}.debug-boolean{color:lightgreen}.debug-date{color:pink}.debug-number{color:yellow}.debug-text{color:white}.debug-array{color:orange}.debug-bigint{color:limegreen}.debug-symbol{color:hotpink}.debug-timestamp{color:#CCC;font-size:0.75em}";
+        stylesheet.innerText = "#debug{display:none} #debugButtons{position:absolute;top:0;right:16px;z-index:1} #hideDebug, #expandDebug, #clearDebug{cursor:pointer;background-color:transparent;border:1px solid transparent;display:inline-block;vertical-align:middle;font-size:1em;font-weight:bold;font-family:Arial,sans-serif;padding:8px;} #hideDebug{font-size:1.3em} #expandDebug{font-size:1.1em} html.debugmodeOn #debug{color:#eee;background-color:#111;background-color:rgba(0,0,0,0.7);text-shadow:0 0 2px #000;font-family:Consolas,'Courier New',Courier,monospace;position:fixed;top:0;left:0;right:auto;right:initial;width:auto;min-width:25%;max-width:40%;height:100%;visibility:visible;display:block;z-index:1099} html.debugmodeOn #debugMsg{height:100%;width:100%;-ms-word-wrap:break-word;word-wrap:break-word;overflow:auto} html.debugmodeOn #debug.debugRight{left:auto;left:initial;right:0} html.debugShowSmall #debug{position:fixed;width:100%;max-width:100%;height:45%;top:auto;top:initial;bottom:0} html.debugShowSmall #debug.debugRight{top:0;bottom:auto;bottom:initial} html.debugmodeOn.debugExpanded #debug{width:100%;max-width:100%;height:100%} .debug-object{color:white} .debug-function{color:magenta} .debug-error{color:red} .debug-string{color:lightblue} .debug-boolean{color:lightgreen} .debug-date{color:pink} .debug-number{color:yellow} .debug-text{color:lightgray} .debug-array{color:orange} .debug-bigint{color:limegreen} .debug-symbol{color:hotpink} .debug-regexp{color:cyan} .debug-timestamp{color:#CCC;font-size:0.75em}";
         document.head.appendChild(stylesheet);
         window.document.body.insertBefore(DEBUG_DIV, window.document.body.firstChild);
         HIDE_DEBUG_BUTTON.addEventListener('click', changeDebugMode);

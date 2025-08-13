@@ -39,7 +39,7 @@ function _debug(timestamp: string, code: any, description?: string, severity?: b
 		str += '</span>';
 		return str;
 	}
-	function print_Val(val: any) {
+	function print_Val(val: any, ancestors: any[] = []): string {
 		var str = "";
 		if (val instanceof Function) str = span('function', 'function() {...}');
 		else if (typeof val === "number" && val > 16e11 && val < 2e12) {
@@ -62,18 +62,20 @@ function _debug(timestamp: string, code: any, description?: string, severity?: b
 		}
 		else if (typeof val === "object") {
 			if (val instanceof Date) str = span("date", val);
-			else if (val instanceof Array) str = print_Array(val);
+			else if (val instanceof Array) str = print_Array(val, ancestors);
 			else if (val instanceof Error) str = span("error", val.name + ": " + val.message, val.stack);
-			else str = span("text", "{ " + print_Obj(val) + " }");
+			else if (val instanceof RegExp) str = span("regexp", val.toString());
+			else if (val instanceof Symbol) str = span("symbol", val.toString());
+			else str = span("object", "{ " + print_Obj(val, ancestors) + " }");
 		}
 		else str = span(typeof val, val);
 		val = null!;
 		return str;
 	}
-	function print_Array(arr: any[]) {
+	function print_Array(arr: any[], ancestors: any[] = []): string {
 		var values: string[] = [], len = arr.length;
 		if (len === 0) return span("array", '[ ' + span("error", "Empty array") + ' ]');
-		for (var i = 0; i < len; i++) values[i] = print_Val(arr[i]);
+		for (var i = 0; i < len; i++) values[i] = print_Val(arr[i], ancestors);
 		var str = span("array", '[ ' + values.join(", ") + ' ]');
 		values = null!;
 		arr = null!;
@@ -83,7 +85,7 @@ function _debug(timestamp: string, code: any, description?: string, severity?: b
 		function enter() {
 			out += "<br />";
 			for (a = 0; a < tabDepth; a++) {
-				out += "&nbsp;&nbsp;&nbsp;&nbsp;";
+				out += "&nbsp;&nbsp;&nbsp;";
 			}
 		}
 		function getArrayDepth(position: number) {
@@ -126,7 +128,7 @@ function _debug(timestamp: string, code: any, description?: string, severity?: b
 			out += str[c];
 			if (str[c] === '"' && prevChar !== "\\") quote = !quote;
 			else if (!quote) {
-				if (str[c] === "," /*&& (array === 0 || array < arrayDepth)*/) {
+				if (str[c] === "," && (array === 0 || array < arrayDepth)) {
 					enter();
 					if (str[c + 1] === " ") c++; //skip space
 				}
@@ -148,11 +150,17 @@ function _debug(timestamp: string, code: any, description?: string, severity?: b
 		}
 		return out;
 	}
-	function print_Obj(obj: { [key: string]: any }): string {
+	function print_Obj(obj: { [key: string]: any }, ancestors: any[] = []): string {
 		var pairs: string[] = [], a = 0, val;
+		if (ancestors.indexOf(obj) !== -1) return span("error", "Circular reference");
+		ancestors.push(obj);
 		for (let key in obj) {
 			val = obj[key];
-			pairs[a] = key + ': ' + print_Val(val);
+			if (typeof Object.getOwnPropertyDescriptor(obj, key)?.get === "function" ||
+				typeof Object.getOwnPropertyDescriptor(obj, key)?.set === "function") {
+					pairs[a] = key + " (getter/setter): " + span("function", print_Val(val, ancestors));
+			}
+			else pairs[a] = key + ': ' + print_Val(val, ancestors);
 			a++;
 			if (a > 25) {
 				pairs[a] = "continued....";
@@ -160,6 +168,7 @@ function _debug(timestamp: string, code: any, description?: string, severity?: b
 			}
 		}
 		a = null!; obj = null!; val = null!;
+		ancestors.pop();
 		return pairs.join(",");
 	}
 	function toDebugDiv() {
@@ -312,6 +321,10 @@ function init() {
 		-ms-word-wrap: break-word;
 		word-wrap: break-word;
 		overflow: auto;
+		-webkit-user-select: text;
+		-moz-user-select: text;
+		-ms-user-select: text;
+		user-select: text;
 	}
 
 	html.debugmodeOn #debug.debugRight {
@@ -343,7 +356,7 @@ function init() {
 	}
 
 	.debug-object {
-		color: cyan;
+		color: white;
 	}
 
 	.debug-function {
@@ -371,7 +384,7 @@ function init() {
 	}
 
 	.debug-text {
-		color: white;
+		color: lightgray;
 	}
 
 	.debug-array {
@@ -384,6 +397,10 @@ function init() {
 
 	.debug-symbol {
 		color: hotpink;
+	}
+
+	.debug-regexp {
+		color: cyan;
 	}
 
 	.debug-timestamp {
